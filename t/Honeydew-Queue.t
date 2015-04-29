@@ -1,17 +1,11 @@
 use strict;
 use warnings;
-use Test::Spec;
-use Test::Deep;
+use Honeydew::Queue;
 use Redis;
 use Resque;
+use Test::Deep;
+use Test::Spec;
 use Test::RedisServer;
-
-BEGIN: {
-    unless (use_ok('Honeydew::Queue')) {
-        BAIL_OUT("Couldn't load Honeydew::Queue");
-        exit;
-    }
-}
 
 my $redis_server;
 eval {
