@@ -1,0 +1,29 @@
+---
+abstract: "Manage Honeydew's nightly queue functionality"
+author:
+  - 'Daniel Gempesaw <gempesaw@gmail.com>'
+build_requires:
+  Redis: '0'
+  Test::Deep: '0'
+  Test::RedisServer: '0'
+  Test::Spec: '0'
+configure_requires:
+  ExtUtils::MakeMaker: '0'
+dynamic_config: 0
+generated_by: 'Dist::Zilla version 5.031, CPAN::Meta::Converter version 2.143240'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: '1.4'
+name: Honeydew-Queue
+requires:
+  Honeydew::Config: '0'
+  Moo: '0'
+  Resque: '0'
+  strict: '0'
+  warnings: '0'
+resources:
+  bugtracker: https://github.com/honeydew-sc/Honeydew-Queue/issues
+  homepage: https://github.com/honeydew-sc/Honeydew-Queue
+  repository: https://github.com/honeydew-sc/Honeydew-Queue.git
+version: '0.02'
