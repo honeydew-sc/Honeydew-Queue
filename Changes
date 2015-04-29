@@ -1,4 +1,4 @@
 Revision history for perl module Honeydew-Queue
 
-{{$NEXT}}
- -
+0.02 2015-04-29
+ - Implement nightly queue reset
