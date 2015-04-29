@@ -1,0 +1,27 @@
+#! /usr/bin/perl
+
+# PODNAME: reset-nightlies
+use strict;
+use warnings;
+use feature qw/say/;
+use DDP;
+use Honeydew::Queue;
+
+=head1 SYNOPSIS
+
+$ ./reset-nightlies
+
+=head1 DESCRIPTION
+
+This connects to the Resque as described in your config file and drops
+all nightly queues (those listed in the C<local> section of your
+config).
+
+=cut
+
+my $hq = Honeydew::Queue->new;
+
+say 'Remaining queues: ';
+p %{ $hq->drop_nightly_queues
+       ->get_queues
+   };
