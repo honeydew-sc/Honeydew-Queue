@@ -26,4 +26,4 @@ resources:
   bugtracker: https://github.com/honeydew-sc/Honeydew-Queue/issues
   homepage: https://github.com/honeydew-sc/Honeydew-Queue
   repository: https://github.com/honeydew-sc/Honeydew-Queue.git
-version: '0.02'
+version: '0.03'

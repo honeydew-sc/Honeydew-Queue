@@ -6,7 +6,9 @@ MANIFEST
 META.json
 META.yml
 Makefile.PL
+bin/reset-nightlies
 cpanfile
+crontab
 dist.ini
 lib/Honeydew/Queue.pm
 t/Honeydew-Queue.t
