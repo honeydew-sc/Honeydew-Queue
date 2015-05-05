@@ -1,6 +1,9 @@
+requires "DDP" => "0";
 requires "Honeydew::Config" => "0";
+requires "Honeydew::ExternalServices::Crontab" => "0";
 requires "Moo" => "0";
 requires "Resque" => "0";
+requires "feature" => "0";
 requires "strict" => "0";
 requires "warnings" => "0";
 
