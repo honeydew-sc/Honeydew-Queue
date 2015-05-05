@@ -16,13 +16,19 @@ my %WriteMakefileArgs = (
     "ExtUtils::MakeMaker" => 0
   },
   "DISTNAME" => "Honeydew-Queue",
-  "EXE_FILES" => [],
+  "EXE_FILES" => [
+    "bin/hd-crontab-queue",
+    "bin/hd-reset-nightlies"
+  ],
   "LICENSE" => "perl",
   "NAME" => "Honeydew::Queue",
   "PREREQ_PM" => {
+    "DDP" => 0,
     "Honeydew::Config" => 0,
+    "Honeydew::ExternalServices::Crontab" => 0,
     "Moo" => 0,
     "Resque" => 0,
+    "feature" => 0,
     "strict" => 0,
     "warnings" => 0
   },
@@ -32,7 +38,7 @@ my %WriteMakefileArgs = (
     "Test::RedisServer" => 0,
     "Test::Spec" => 0
   },
-  "VERSION" => "0.03",
+  "VERSION" => "0.04",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -40,14 +46,17 @@ my %WriteMakefileArgs = (
 
 
 my %FallbackPrereqs = (
+  "DDP" => 0,
   "ExtUtils::MakeMaker" => 0,
   "Honeydew::Config" => 0,
+  "Honeydew::ExternalServices::Crontab" => 0,
   "Moo" => 0,
   "Redis" => 0,
   "Resque" => 0,
   "Test::Deep" => 0,
   "Test::RedisServer" => 0,
   "Test::Spec" => 0,
+  "feature" => 0,
   "strict" => 0,
   "warnings" => 0
 );

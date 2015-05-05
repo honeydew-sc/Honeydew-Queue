@@ -1,0 +1,71 @@
+#! /usr/bin/perl
+
+# PODNAME: hd-crontab-queue - append Honeydew::Queue business to your crontab
+use strict;
+use warnings;
+use feature qw/say/;
+use Honeydew::ExternalServices::Crontab qw/add_crontab_section/;
+
+
+my $crontab = [
+    '0 20 * * * PATH=$PATH:$HOME/perl5/bin/ hd-reset-nightlies'
+];
+
+say $_ for @{ add_crontab_section( 'queue', $crontab ) };
+
+__END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+hd-crontab-queue - append Honeydew::Queue business to your crontab
+
+=head1 VERSION
+
+version 0.04
+
+=head1 SYNOPSIS
+
+    $ hd-crontab-queue
+
+=head1 DESCRIPTION
+
+Prints to STDOUT your current crontab with the L<Honeydew::Queue>
+section appended to the end of it.
+
+=head1 SEE ALSO
+
+Please see those modules/websites for more information related to this module.
+
+=over 4
+
+=item *
+
+L<Honeydew::Queue|Honeydew::Queue>
+
+=back
+
+=head1 BUGS
+
+Please report any bugs or feature requests on the bugtracker website
+https://github.com/honeydew-sc/Honeydew-Queue/issues
+
+When submitting a bug or request, please include a test-file or a
+patch to an existing test-file that illustrates the bug or desired
+feature.
+
+=head1 AUTHOR
+
+Daniel Gempesaw <gempesaw@gmail.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2015 by Daniel Gempesaw.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut

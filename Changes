@@ -1,5 +1,8 @@
 Revision history for perl module Honeydew-Queue
 
+0.04 2015-05-11
+ - Change method for getting crontab over
+
 0.03 2015-04-29
  - Add crontab and executable for nightly queue reset
 

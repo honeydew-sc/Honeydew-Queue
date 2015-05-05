@@ -17,13 +17,16 @@ meta-spec:
   version: '1.4'
 name: Honeydew-Queue
 requires:
+  DDP: '0'
   Honeydew::Config: '0'
+  Honeydew::ExternalServices::Crontab: '0'
   Moo: '0'
   Resque: '0'
+  feature: '0'
   strict: '0'
   warnings: '0'
 resources:
   bugtracker: https://github.com/honeydew-sc/Honeydew-Queue/issues
   homepage: https://github.com/honeydew-sc/Honeydew-Queue
   repository: https://github.com/honeydew-sc/Honeydew-Queue.git
-version: '0.03'
+version: '0.04'

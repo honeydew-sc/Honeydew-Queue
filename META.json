@@ -28,9 +28,12 @@
       },
       "runtime" : {
          "requires" : {
+            "DDP" : "0",
             "Honeydew::Config" : "0",
+            "Honeydew::ExternalServices::Crontab" : "0",
             "Moo" : "0",
             "Resque" : "0",
+            "feature" : "0",
             "strict" : "0",
             "warnings" : "0"
          }
@@ -56,6 +59,6 @@
          "web" : "https://github.com/honeydew-sc/Honeydew-Queue"
       }
    },
-   "version" : "0.03"
+   "version" : "0.04"
 }
 
