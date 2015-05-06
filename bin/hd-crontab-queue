@@ -18,7 +18,8 @@ section appended to the end of it.
 =cut
 
 my $crontab = [
-    '0 20 * * * PATH=$PATH:$HOME/perl5/bin/ hd-reset-nightlies'
+    '# clear the nightly queues before we start the nightlies',
+    '0 20 * * * source ~/.bashrc; hd-reset-nightlies'
 ];
 
 say $_ for @{ add_crontab_section( 'queue', $crontab ) };
