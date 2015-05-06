@@ -1,5 +1,8 @@
 Revision history for perl module Honeydew-Queue
 
+0.05 2015-06-11
+ - Fix crontab command for resetting nightlies
+
 0.04 2015-05-11
  - Change method for getting crontab over
 
