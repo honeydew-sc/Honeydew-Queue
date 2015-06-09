@@ -32,6 +32,11 @@ has config => (
     default => sub { return Honeydew::Config->instance }
 );
 
+has run_all => (
+    is => 'lazy',
+    default => sub { return 0 }
+);
+
 has sets_to_run => (
     is => 'lazy',
     default => sub {
@@ -72,12 +77,13 @@ sub expected_sets {
 }
 
 sub actual_sets {
-    my ($dbh) = $_[0]->dbh;
+    my ($self) = @_;
+    my ($dbh) = $self->dbh;
 
     # cache to avoid repeated db calls
     state $actual;
     return $actual if $actual;
-    # return {} if _run_all_sets();
+    return {} if $self->run_all;
 
     my @fields = qw/id setName host browser/;
     my $sth = $dbh->prepare('SELECT ' . join(',', @fields) . ' FROM setRun WHERE `userId` = 2 AND `startDate` >= now() - INTERVAL 12 HOUR;');

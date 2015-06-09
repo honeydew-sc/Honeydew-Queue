@@ -36,6 +36,15 @@ describe 'Nightly' => sub {
             is( $expected_sets->[1], 'other_fake.set other_fake_host other_fake_browser' );
         };
 
+        it 'should not query the setRun table when running all' => sub {
+            my $run_all_nightly = Honeydew::Queue::Nightly->new(
+                dbh => $dbh,
+                config => $config,
+                run_all => 1
+            );
+            is_deeply( $run_all_nightly->actual_sets, {} );
+        };
+
         it 'should query the setRun table for existing sets' => sub {
             mock_actual_sets( $dbh );
             my $actual_sets = $nightly->actual_sets;
