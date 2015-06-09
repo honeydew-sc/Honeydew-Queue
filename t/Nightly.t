@@ -137,7 +137,7 @@ describe 'Nightly' => sub {
                     'not_a_file.set'
                 ]
             );
-            my $expected_features = $nightly->expected_features();
+            my $expected_features = $nightly->features_to_run;
 
             is_deeply( $expected_features->{'empty_fixture.set'}, [] );
             is_deeply( $expected_features->{'not_a_file.set'}, [] );
