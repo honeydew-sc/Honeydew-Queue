@@ -106,7 +106,7 @@ sub _set_count {
 sub _get_missing {
     my ($count_hash) = @_;
 
-    return [ grep { not $count_hash->{$_} } keys %$count_hash ];
+    return [ sort grep { not $count_hash->{$_} } keys %$count_hash ];
 }
 
 1;
