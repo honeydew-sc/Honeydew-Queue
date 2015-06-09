@@ -2,6 +2,7 @@ package Honeydew::Queue::Nightly;
 
 # ABSTRACT: Accumulate sets and features for nightly enqueueing
 use Moo;
+use MooX::Aliases;
 use feature qw/state/;
 use File::Spec;
 use Honeydew::Config;
@@ -48,7 +49,26 @@ has sets_to_run => (
     }
 );
 
+has features_to_run => (
+    is => 'lazy',
+    alias => 'expected_features',
+    default => sub {
+        my ($self) = @_;
+        my ($sets) = $self->sets_to_run;
 
+        # the $sets aref has the set name, host, and browser join(' ')'d
+        my @set_filenames = map _get_set_name($_), @{ $sets };
+
+        my $features = { map {
+            my $files = $self->_get_files($_);
+            if ($files) {
+                $_ => $files
+            }
+        } @set_filenames };
+
+        return $features;
+    }
+);
 
 
 sub expected_sets {
@@ -120,6 +140,33 @@ sub _get_missing {
     my ($count_hash) = @_;
 
     return [ sort grep { not $count_hash->{$_} } keys %$count_hash ];
+}
+
+sub _get_set_name {
+    my ($concatted) = @_;
+
+    my @set = split(' ', $concatted);
+    return shift @set;
+}
+
+sub _get_files {
+    my ($self, $name) = @_;
+
+    my $sets_dir = $self->config->sets_dir;
+    my $filename = File::Spec->catfile($sets_dir, $name);
+    return [] unless -f $filename;
+
+    open (my $fh, '<', $filename);
+    my (@file) = <$fh>;
+    close ($fh);
+
+    @file = map {
+        chomp;
+        $_ =~ s/^\.\///;
+        $_
+    } @file;
+
+    return \@file;
 }
 
 1;
