@@ -119,7 +119,7 @@ sub _get_missing {
     return [ sort grep { not $count_hash->{$_} } keys %$count_hash ];
 }
 
-has features_to_run => (
+has all_expected_features => (
     is => 'lazy',
     default => sub {
         my ($self) = @_;
@@ -176,7 +176,7 @@ has set_commands_to_run => (
 
         # A hash: keys are set names, values are features read from
         # the appropriate set file.
-        my ($features_in_sets) = $self->features_to_run;
+        my ($features_in_sets) = $self->all_expected_features;
 
         my @rerun;
         foreach my $set_job (@$set_jobs) {
@@ -246,8 +246,6 @@ sub _get_command {
 
     return $job_string;
 }
-
-
 
 
 1;

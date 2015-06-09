@@ -59,7 +59,7 @@ describe 'Nightly' => sub {
                     'invalid.set invalid_host invalid_browser'
                 ];
 
-                my $features_to_run = {
+                my $all_expected_features = {
                     'fake.set' => [
                         'fake.feature'
                     ],
@@ -76,7 +76,7 @@ describe 'Nightly' => sub {
 
                 $command_nightly = Honeydew::Queue::Nightly->new(
                     sets_to_run => $sets_to_run,
-                    features_to_run => $features_to_run,
+                    all_expected_features => $all_expected_features,
                     config => $config
                 );
             };
@@ -137,7 +137,7 @@ describe 'Nightly' => sub {
                     'not_a_file.set'
                 ]
             );
-            my $expected_features = $nightly->features_to_run;
+            my $expected_features = $nightly->all_expected_features;
 
             is_deeply( $expected_features->{'empty_fixture.set'}, [] );
             is_deeply( $expected_features->{'not_a_file.set'}, [] );
