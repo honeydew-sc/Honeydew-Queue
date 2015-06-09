@@ -33,7 +33,7 @@ sub get_sets_to_be_queued {
     my $actual_sets = $self->actual_sets;
 
     my $set_count = _set_count($expected_sets, [ values %{ $actual_sets } ] );
-    my $missing_sets = get_missing($set_count);
+    my $missing_sets = _get_missing($set_count);
 
     return $missing_sets;
 }
@@ -101,6 +101,12 @@ sub _set_count {
     }
 
     return \%count;
+}
+
+sub _get_missing {
+    my ($count_hash) = @_;
+
+    return [ grep { not $count_hash->{$_} } keys %$count_hash ];
 }
 
 1;
