@@ -23,8 +23,6 @@ use Resque;
 This module is a thin wrapper around L<Resque> that implements
 Honeydew-specific queue functionality that we'd like.
 
-=cut
-
 =attr resque
 
 Optional: By default, we'll instantiate a Resque client for the one
