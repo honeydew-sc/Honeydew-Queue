@@ -4,6 +4,9 @@ use strict;
 use warnings;
 use DBD::Mock;
 use DBI;
+use File::Temp qw/ tempfile /;
+use File::Basename qw/ dirname /;
+use File::Spec;
 use Test::Spec;
 
 use Honeydew::Config;
@@ -26,25 +29,24 @@ describe 'Nightly' => sub {
     };
 
     describe 'sets' => sub {
-
         it 'should query the monitor table for expected sets' => sub {
             mock_expected_sets( $dbh );
             my $expected_sets = $nightly->expected_sets;
-            is( $expected_sets->[0], 'fake.set fake host fake browser' );
-            is( $expected_sets->[1], 'other_fake.set other fake host other fake browser' );
+            is( $expected_sets->[0], 'fake.set fake_host fake_browser' );
+            is( $expected_sets->[1], 'other_fake.set other_fake_host other_fake_browser' );
         };
 
         it 'should query the setRun table for existing sets' => sub {
             mock_actual_sets( $dbh );
             my $actual_sets = $nightly->actual_sets;
-            is_deeply( $actual_sets, { 1 => 'fake.set fake host fake browser' });
+            is_deeply( $actual_sets, { 1 => 'fake.set fake_host fake_browser' });
         };
 
         it 'should get a proper list of the sets to be queued' => sub {
             mock_expected_sets( $dbh );
             mock_actual_sets( $dbh );
-            my $missing_sets = $nightly->get_sets_to_be_queued;
-            is( $missing_sets->[0], 'other_fake.set other fake host other fake browser' );
+            my $missing_sets = $nightly->sets_to_run;
+            is( $missing_sets->[0], 'other_fake.set other_fake_host other_fake_browser' );
         };
 
         describe 'convenience fns' => sub {
@@ -100,8 +102,8 @@ sub mock_expected_sets {
         sql => 'SELECT `set` as setName,`host`,`browser` FROM monitor WHERE `on` = 1',
         results => [
             [ 'setName'        , 'host'            , 'browser'            ],
-            [ 'fake.set'       , 'fake host'       , 'fake browser'       ],
-            [ 'other_fake.set' , 'other fake host' , 'other fake browser' ],
+            [ 'fake.set'       , 'fake_host'       , 'fake_browser'       ],
+            [ 'other_fake.set' , 'other_fake_host' , 'other_fake_browser' ],
         ]
     };
 }
@@ -113,7 +115,7 @@ sub mock_actual_sets {
         sql => 'SELECT id,setName,host,browser FROM setRun WHERE `userId` = 2 AND `startDate` >= now() - INTERVAL 12 HOUR;',
         results => [
             [ 'id' , 'setName', 'host', 'browser' ],
-            [ 1    , 'fake.set', 'fake host', 'fake browser' ]
+            [ 1    , 'fake.set', 'fake_host', 'fake_browser' ]
         ]
     };
 }
