@@ -14,7 +14,7 @@ has dbh => (
         my $settings = $self->config->{mysql};
 
         require DBI;
-        # require DBD::mysql;
+        require DBD::mysql;
 
         my $dbh = DBI->connect(
             'DBI:mysql:database=' . $settings->{database}
@@ -48,28 +48,6 @@ has sets_to_run => (
         return $missing_sets;
     }
 );
-
-has features_to_run => (
-    is => 'lazy',
-    alias => 'expected_features',
-    default => sub {
-        my ($self) = @_;
-        my ($sets) = $self->sets_to_run;
-
-        # the $sets aref has the set name, host, and browser join(' ')'d
-        my @set_filenames = map _get_set_name($_), @{ $sets };
-
-        my $features = { map {
-            my $files = $self->_get_files($_);
-            if ($files) {
-                $_ => $files
-            }
-        } @set_filenames };
-
-        return $features;
-    }
-);
-
 
 sub expected_sets {
     my ($self) = @_;
@@ -141,6 +119,27 @@ sub _get_missing {
 
     return [ sort grep { not $count_hash->{$_} } keys %$count_hash ];
 }
+
+has features_to_run => (
+    is => 'lazy',
+    alias => 'expected_features',
+    default => sub {
+        my ($self) = @_;
+        my @sets = @{ $self->sets_to_run };
+
+        # the $sets aref has the set name, host, and browser join(' ')'d
+        my @set_filenames = map _get_set_name($_), @sets;
+
+        my $features = { map {
+            my $files = $self->_get_files($_);
+            if ($files) {
+                $_ => $files
+            }
+        } @set_filenames };
+
+        return $features;
+    }
+);
 
 sub _get_set_name {
     my ($concatted) = @_;
