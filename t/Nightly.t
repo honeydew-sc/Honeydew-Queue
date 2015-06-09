@@ -6,17 +6,22 @@ use DBD::Mock;
 use DBI;
 use Test::Spec;
 
+use Honeydew::Config;
 use Honeydew::Queue::Nightly;
 
 describe 'Nightly' => sub {
-    my ($nightly, $dbh);
+    my ($nightly, $dbh, $config);
 
     $dbh = DBI->connect( 'DBI:Mock:', '', '' )
       || die "Cannot create handle: $DBI::errstr\n";
 
     before each => sub {
+        $config = Honeydew::Config->instance;
+        $config->{honeydew}->{basedir} = File::Spec->catfile( dirname(__FILE__), 'fixture' );
+
         $nightly = Honeydew::Queue::Nightly->new(
-            dbh => $dbh
+            dbh => $dbh,
+            config => $config
         );
     };
 
@@ -64,6 +69,27 @@ describe 'Nightly' => sub {
                 is_deeply( $missing, [ qw/b d/ ] );
             };
         };
+    };
+
+    describe 'features' => sub {
+
+        it 'should get features from a list of set files' => sub {
+            my $nightly = Honeydew::Queue::Nightly->new(
+                dbh => $dbh,
+                config => $config,
+                sets_to_run => [
+                    'fixture.set',
+                    'empty_fixture.set',
+                    'not_a_file.set'
+                ]
+            );
+            my $expected_features = $nightly->expected_features();
+
+            is_deeply( $expected_features->{'empty_fixture.set'}, [] );
+            is_deeply( $expected_features->{'not_a_file.set'}, [] );
+            is_deeply( $expected_features->{'fixture.set'}, [ 'fake.feature' ] );
+        };
+
     };
 };
 
