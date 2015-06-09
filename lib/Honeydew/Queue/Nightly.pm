@@ -68,4 +68,28 @@ sub _concat {
     return join( $sep , @{ $aref } );
 }
 
+sub actual_sets {
+    my ($dbh) = $_[0]->dbh;
+
+    # cache to avoid repeated db calls
+    state $actual;
+    return $actual if $actual;
+    # return {} if _run_all_sets();
+
+    my @fields = qw/id setName host browser/;
+    my $sth = $dbh->prepare('SELECT ' . join(',', @fields) . ' FROM setRun WHERE `userId` = 2 AND `startDate` >= now() - INTERVAL 12 HOUR;');
+    $sth->execute;
+    my $results = $sth->fetchall_arrayref;
+
+    $actual = {
+        map {
+            my ($monitor) = $_;
+            my $id = shift @{ $monitor };
+            $id => _concat($monitor);
+        } @{ $results }
+    };
+
+    return $actual;
+}
+
 1;

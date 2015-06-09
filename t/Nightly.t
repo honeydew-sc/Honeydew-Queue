@@ -35,9 +35,27 @@ describe 'Nightlies' => sub {
         is( $expected_sets->[1], 'other_fake.set other fake host other fake browser' );
     };
 
-    after_each => sub {
+
+    it 'should query the setRun table for existing sets' => sub {
+        $dbh->{mock_add_resultset} = {
+            sql => 'SELECT id,setName,host,browser FROM setRun WHERE `userId` = 2 AND `startDate` >= now() - INTERVAL 12 HOUR;',
+            results => [
+                [ 'id' , 'setName', 'host', 'browser' ],
+                [ 1    , 'fake.set', 'fake host', 'fake browser' ]
+
+            ]
+        };
+
+        my $actual_sets = $nightly->actual_sets;
+        is_deeply( $actual_sets, { 1 => 'fake.set fake host fake browser' });
+
+    };
+
+    after each => sub {
         $dbh->{mock_clear_history} = 1;
     };
+
+
 };
 
 
