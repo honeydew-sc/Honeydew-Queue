@@ -49,6 +49,58 @@ describe 'Nightly' => sub {
             is( $missing_sets->[0], 'other_fake.set other_fake_host other_fake_browser' );
         };
 
+        describe 'commands' => sub {
+            my $command_nightly;
+
+            before each => sub {
+                my $sets_to_run = [
+                    'fake.set fake_host fake_browser',
+                    'fake2.set fake2_host AB fake_browser Local',
+                    'invalid.set invalid_host invalid_browser'
+                ];
+
+                my $features_to_run = {
+                    'fake.set' => [
+                        'fake.feature'
+                    ],
+                    'fake2.set' => [
+                        'fake.feature'
+                    ]
+                };
+
+                my $config = {
+                    local => {
+                        AB => '1.2.3.4'
+                    }
+                };
+
+                $command_nightly = Honeydew::Queue::Nightly->new(
+                    sets_to_run => $sets_to_run,
+                    features_to_run => $features_to_run,
+                    config => $config
+                );
+            };
+
+            it 'should get a validated list of set commands to run' => sub {
+                my $cmds = $command_nightly->set_commands_to_run;
+                like($cmds->[0], qr/setRunId=.*?\^user=croneyDew\^browser=fake_browser \(set\)\^setName=fake.set\^host=fake_host/);
+            };
+
+            it 'should include the local address if applicable' => sub {
+                my $cmds = $command_nightly->set_commands_to_run;
+                like($cmds->[1], qr/\^local=1\.2\.3\.4/);
+            };
+
+            it 'should only include sets with features' => sub {
+                my $cmds = $command_nightly->set_commands_to_run;
+                # There are 3 sets to run, but only 2 in features to
+                # run, so we should be dropping the invalid one.
+                is( scalar @$cmds, 2 );
+            };
+
+
+        };
+
         describe 'convenience fns' => sub {
             it 'should count which needles can be found in a haystack ' => sub {
                 my $haystack = [ qw/a b c d e/ ];

@@ -168,4 +168,88 @@ sub _get_files {
     return \@file;
 }
 
+has set_commands_to_run => (
+    is => 'lazy',
+    default => sub {
+        my ($self) = @_;
+
+        # set job is "setName host browser" simply concatenated
+        my ($set_jobs) = $self->sets_to_run;
+
+        # A hash: keys are set names, values are features read from
+        # the appropriate set file.
+        my ($features_in_sets) = $self->features_to_run;
+
+        my @rerun;
+        foreach my $set_job (@$set_jobs) {
+            my $set = _get_set_name($set_job);
+            if (exists $features_in_sets->{$set}) {
+                my $job = $self->_job_from_monitor($set_job);
+                push(@rerun, _get_command($job));
+            }
+        }
+
+        return \@rerun;
+    }
+);
+
+sub _job_from_monitor {
+    my ($self, $monitor, $config) = @_;
+
+    $monitor =~ s/  / /g;
+    my ($set, $host, $browser) = split(' ', $monitor, 3);
+
+    return {
+        setName  => $set,
+        host     => $host,
+        browser  => $browser . ' (set)',
+        user     => 'croneyDew',
+        setRunId => _set_run_id(),
+        %{ $self->_get_wd_server($browser, $config) }
+    };
+}
+
+sub _set_run_id {
+    my @chars = (0..9, 'a'..'z');
+    my $string;
+
+    $string .= $chars[rand @chars] for 1..8;
+
+    return $string;
+}
+
+sub _get_wd_server {
+    my ($self, $browser) = @_;
+    my $local = $self->config->{local};
+
+    my $local_by_abbrev = {
+        map {
+            my $key = [ split('_', $_) ];
+            $key = pop(@$key);
+            uc $key => $local->{$_}
+        } keys %$local
+    };
+
+    if ($browser =~ /^(..) .* Local$/i) {
+        my $server = $1;
+        return { local => $local_by_abbrev->{$server} };
+    }
+    else {
+        return {};
+    }
+}
+
+sub _get_command {
+    my ($job) = @_;
+
+    my $job_string = join('^', map {
+        $_ . '=' . $job->{$_}
+    } keys %$job );
+
+    return $job_string;
+}
+
+
+
+
 1;
