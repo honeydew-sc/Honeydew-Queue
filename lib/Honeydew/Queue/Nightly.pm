@@ -2,7 +2,6 @@ package Honeydew::Queue::Nightly;
 
 # ABSTRACT: Accumulate sets and features for nightly enqueueing
 use Moo;
-use MooX::Aliases;
 use feature qw/state/;
 use File::Spec;
 use Honeydew::Config;
@@ -122,7 +121,6 @@ sub _get_missing {
 
 has features_to_run => (
     is => 'lazy',
-    alias => 'expected_features',
     default => sub {
         my ($self) = @_;
         my @sets = @{ $self->sets_to_run };

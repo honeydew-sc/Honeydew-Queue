@@ -1,5 +1,7 @@
+requires "DBD::mysql" => "0";
 requires "DBI" => "0";
 requires "DDP" => "0";
+requires "File::Spec" => "0";
 requires "Honeydew::Config" => "0";
 requires "Honeydew::ExternalServices::Crontab" => "0";
 requires "Moo" => "0";
@@ -10,8 +12,9 @@ requires "warnings" => "0";
 
 on 'test' => sub {
   requires "DBD::Mock" => "0";
+  requires "File::Basename" => "0";
+  requires "File::Temp" => "0";
   requires "Redis" => "0";
-  requires "Test::Deep" => "0";
   requires "Test::RedisServer" => "0";
   requires "Test::Spec" => "0";
 };
