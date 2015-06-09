@@ -20,7 +20,7 @@ describe 'Nightlies' => sub {
         );
     };
 
-    it 'should ask the monitor table for expected sets' => sub {
+    it 'should query the monitor table for expected sets' => sub {
         $dbh->{mock_add_resultset} = {
             sql => 'SELECT `set` as setName,`host`,`browser` FROM monitor WHERE `on` = 1',
             results => [
@@ -34,7 +34,6 @@ describe 'Nightlies' => sub {
         is( $expected_sets->[0], 'fake.set fake host fake browser' );
         is( $expected_sets->[1], 'other_fake.set other fake host other fake browser' );
     };
-
 
     it 'should query the setRun table for existing sets' => sub {
         $dbh->{mock_add_resultset} = {
@@ -51,10 +50,25 @@ describe 'Nightlies' => sub {
 
     };
 
+    it 'should count which needles can be found in a haystack ' => sub {
+        my $haystack = [ qw/a b c d e/ ];
+        my $needle = [ qw/a c e/ ];
+
+        my $counted_sets = Honeydew::Queue::Nightly::_set_count( $haystack, $needle );
+        is_deeply($counted_sets, {
+            a => 1,
+            b => 0,
+            c => 1,
+            d => 0,
+            e => 1
+        });
+    };
+
+
+
     after each => sub {
         $dbh->{mock_clear_history} = 1;
     };
-
 
 };
 

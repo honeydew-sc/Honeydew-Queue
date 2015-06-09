@@ -32,7 +32,7 @@ sub get_sets_to_be_queued {
     my $expected_sets = $self->expected_sets;
     my $actual_sets = $self->actual_sets;
 
-    my $set_count = set_count($expected_sets, [ values %{ $actual_sets } ] );
+    my $set_count = _set_count($expected_sets, [ values %{ $actual_sets } ] );
     my $missing_sets = get_missing($set_count);
 
     return $missing_sets;
@@ -90,6 +90,17 @@ sub actual_sets {
     };
 
     return $actual;
+}
+
+sub _set_count {
+    my ($expected, $actual) = @_;
+
+    my %count = map { $_ => 0 } @$expected;
+    foreach (@$actual) {
+        $count{$_}++;
+    }
+
+    return \%count;
 }
 
 1;
