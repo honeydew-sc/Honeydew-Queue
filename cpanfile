@@ -1,3 +1,4 @@
+requires "DBI" => "0";
 requires "DDP" => "0";
 requires "Honeydew::Config" => "0";
 requires "Honeydew::ExternalServices::Crontab" => "0";
@@ -8,6 +9,7 @@ requires "strict" => "0";
 requires "warnings" => "0";
 
 on 'test' => sub {
+  requires "DBD::Mock" => "0";
   requires "Redis" => "0";
   requires "Test::Deep" => "0";
   requires "Test::RedisServer" => "0";
