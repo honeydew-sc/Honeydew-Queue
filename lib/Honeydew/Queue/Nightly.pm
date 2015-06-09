@@ -61,13 +61,6 @@ sub expected_sets {
     return $expected;
 }
 
-sub _concat {
-    my ($aref, $sep) = @_;
-    $sep ||= ' ';
-
-    return join( $sep , @{ $aref } );
-}
-
 sub actual_sets {
     my ($dbh) = $_[0]->dbh;
 
@@ -90,6 +83,13 @@ sub actual_sets {
     };
 
     return $actual;
+}
+
+sub _concat {
+    my ($aref, $sep) = @_;
+    $sep ||= ' ';
+
+    return join( $sep , @{ $aref } );
 }
 
 sub _set_count {

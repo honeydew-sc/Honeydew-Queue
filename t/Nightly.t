@@ -64,9 +64,7 @@ describe 'Nightly' => sub {
                 is_deeply( $missing, [ qw/b d/ ] );
             };
         };
-
     };
-
 };
 
 sub mock_expected_sets {
