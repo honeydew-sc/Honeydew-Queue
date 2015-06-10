@@ -182,6 +182,23 @@ describe 'Nightly' => sub {
                        { 'actual.set' => [ 'executed.feature' ] } );
         };
 
+        it 'should figure out which features are missing' => sub {
+            my $nightly = Honeydew::Queue::Nightly->new(
+                dbh => $dbh,
+                config => $config,
+                actual_sets => {
+                    1 => 'fake.set'
+                }
+            );
+
+            mock_actual_sets( $dbh );
+            mock_actual_features( $dbh );
+            my $features_to_run = $nightly->features_to_run;
+            use Data::Dumper; use DDP;
+            p $features_to_run;
+
+        };
+
     };
 };
 

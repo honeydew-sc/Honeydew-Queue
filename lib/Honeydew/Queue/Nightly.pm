@@ -254,6 +254,19 @@ sub _get_command {
     return $job_string;
 }
 
+has features_to_run => (
+    is => 'lazy',
+    default => sub {
+        my ($self) = @_;
+
+        my $expected_features = $self->all_expected_features;
+        my $actual_features = $self->actual_features;
+        my $actual_sets = $self->actual_sets;
+
+        my $missing_features = missing_features( $expected_features, $actual_features, $actual_sets );
+    }
+);
+
 sub actual_features {
     my ($self) = @_;
     my $dbh = $self->dbh;
@@ -277,5 +290,31 @@ sub actual_features {
     return $executed_features_by_set;
 }
 
+sub missing_features {
+    my ($expected_features, $actual_features, $actual_sets) = @_;
+
+    my @sets_missing_features = grep {
+        my $monitor = $_;
+        my $set = _get_set_name($monitor);
+
+        my $expected_size = scalar @{ $expected_features->{$set} };
+        my $actual_size = scalar @{ $actual_features->{$monitor} };
+
+        $expected_size > $actual_size
+    } values %$actual_sets;
+
+    my $sets_to_ids = { reverse %$actual_sets };
+
+    my $feature_count;
+    foreach my $monitor (@sets_missing_features) {
+        my $set = _get_set_name($monitor);
+
+        my $count = set_count($expected_features->{$set}, $actual_features->{$monitor});
+        my $key = $sets_to_ids->{$monitor} . ' ' . $monitor;
+        $feature_count->{$key} = $count;
+    }
+
+    return $feature_count;
+}
 
 1;
