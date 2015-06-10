@@ -34,7 +34,10 @@ has config => (
 
 has run_all => (
     is => 'lazy',
-    default => sub { return 0 }
+    default => sub {
+        return 0 unless scalar @ARGV >= 2;
+        return $ARGV[1] eq 'all';
+    }
 );
 
 has sets_to_run => (
@@ -81,9 +84,10 @@ sub actual_sets {
     my ($dbh) = $self->dbh;
 
     # cache to avoid repeated db calls
+    return {} if $self->run_all;
+
     state $actual;
     return $actual if $actual;
-    return {} if $self->run_all;
 
     my @fields = qw/id setName host browser/;
     my $sth = $dbh->prepare('SELECT ' . join(',', @fields) . ' FROM setRun WHERE `userId` = 2 AND `startDate` >= now() - INTERVAL 12 HOUR;');
