@@ -79,31 +79,28 @@ sub expected_sets {
     return $expected;
 }
 
-sub actual_sets {
-    my ($self) = @_;
-    my ($dbh) = $self->dbh;
+has actual_sets => (
+    is => 'lazy',
+    default => sub {
+        my ($self) = @_;
+        my ($dbh) = $self->dbh;
 
-    # cache to avoid repeated db calls
-    return {} if $self->run_all;
+        return {} if $self->run_all;
 
-    state $actual;
-    return $actual if $actual;
+        my @fields = qw/id setName host browser/;
+        my $sth = $dbh->prepare('SELECT ' . join(',', @fields) . ' FROM setRun WHERE `userId` = 2 AND `startDate` >= now() - INTERVAL 12 HOUR;');
+        $sth->execute;
+        my $results = $sth->fetchall_arrayref;
 
-    my @fields = qw/id setName host browser/;
-    my $sth = $dbh->prepare('SELECT ' . join(',', @fields) . ' FROM setRun WHERE `userId` = 2 AND `startDate` >= now() - INTERVAL 12 HOUR;');
-    $sth->execute;
-    my $results = $sth->fetchall_arrayref;
-
-    $actual = {
-        map {
-            my ($monitor) = $_;
-            my $id = shift @{ $monitor };
-            $id => _concat($monitor);
-        } @{ $results }
-    };
-
-    return $actual;
-}
+        return {
+            map {
+                my ($monitor) = $_;
+                my $id = shift @{ $monitor };
+                $id => _concat($monitor);
+            } @{ $results }
+        };
+    }
+);
 
 sub _concat {
     my ($aref, $sep) = @_;
@@ -255,6 +252,29 @@ sub _get_command {
     } keys %$job );
 
     return $job_string;
+}
+
+sub actual_features {
+    my ($self) = @_;
+    my $dbh = $self->dbh;
+    my $sets = $self->actual_sets;
+
+    my $executed_features_by_set;
+    my $sth = $dbh->prepare('SELECT featureFile from report where setRunId = ?');
+
+    foreach (keys %$sets) {
+        $sth->execute( $_ );
+        my $actually_executed = [
+            map {
+                # trim leading /./ from database records
+                $_ =~ s/^\/\.\///;
+                $_
+            } keys %{ $sth->fetchall_hashref('featureFile') }
+        ];
+        $executed_features_by_set->{$sets->{$_}} = $actually_executed;
+    }
+
+    return $executed_features_by_set;
 }
 
 

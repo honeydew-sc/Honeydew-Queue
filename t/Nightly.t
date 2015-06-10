@@ -167,6 +167,21 @@ describe 'Nightly' => sub {
             is_deeply( $expected_features->{'fixture.set'}, [ 'fake.feature' ] );
         };
 
+        it 'should query the database for actually executed features' => sub {
+            my $nightly = Honeydew::Queue::Nightly->new(
+                dbh => $dbh,
+                config => $config,
+                actual_sets => {
+                    1 => 'actual.set'
+                }
+            );
+
+            mock_actual_features( $dbh );
+            my $actual_features = $nightly->actual_features;
+            is_deeply( $actual_features,
+                       { 'actual.set' => [ 'executed.feature' ] } );
+        };
+
     };
 };
 
@@ -191,6 +206,18 @@ sub mock_actual_sets {
         results => [
             [ 'id' , 'setName', 'host', 'browser' ],
             [ 1    , 'fake.set', 'fake_host', 'fake_browser' ]
+        ]
+    };
+}
+
+sub mock_actual_features {
+    my ($dbh) = @_;
+
+    $dbh->{mock_add_resultset} = {
+        sql => 'SELECT featureFile from report where setRunId = ?',
+        results => [
+            [ 'featureFile'      ],
+            [ 'executed.feature' ]
         ]
     };
 }
