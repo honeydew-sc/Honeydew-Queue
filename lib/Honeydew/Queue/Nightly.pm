@@ -254,7 +254,7 @@ sub _get_command {
     return $job_string;
 }
 
-has features_to_run => (
+has feature_run_status => (
     is => 'lazy',
     default => sub {
         my ($self) = @_;
@@ -309,7 +309,7 @@ sub missing_features {
     foreach my $monitor (@sets_missing_features) {
         my $set = _get_set_name($monitor);
 
-        my $count = set_count($expected_features->{$set}, $actual_features->{$monitor});
+        my $count = _set_count($expected_features->{$set}, $actual_features->{$monitor});
         my $key = $sets_to_ids->{$monitor} . ' ' . $monitor;
         $feature_count->{$key} = $count;
     }
