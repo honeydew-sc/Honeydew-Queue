@@ -18,8 +18,13 @@ describe 'Nightly' => sub {
     $dbh = DBI->connect( 'DBI:Mock:', '', '' )
       || die "Cannot create handle: $DBI::errstr\n";
 
+
+    my ($fh, $filename) = tempfile();
+    print $fh qq/[header]\nkey=value/;
+    close ($fh);
+
     before each => sub {
-        $config = Honeydew::Config->instance;
+        $config = Honeydew::Config->instance( file => $filename );
         $config->{honeydew}->{basedir} = File::Spec->catfile( dirname(__FILE__), 'fixture' );
 
         $nightly = Honeydew::Queue::Nightly->new(
