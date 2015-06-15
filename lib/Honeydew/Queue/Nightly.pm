@@ -250,7 +250,7 @@ sub _get_command {
 
     my $job_string = join('^', map {
         $_ . '=' . $job->{$_}
-    } keys %$job );
+    } sort keys %$job );
 
     return $job_string;
 }
@@ -355,11 +355,5 @@ has feature_commands_to_run => (
         return \@rerun;
     }
 );
-
-sub _get_missing {
-    my ($count_hash) = @_;
-
-    return [ grep { not $count_hash->{$_} } keys %$count_hash ];
-}
 
 1;

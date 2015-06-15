@@ -111,7 +111,7 @@ describe 'Nightly' => sub {
 
             it 'should get a validated list of set commands to run' => sub {
                 my $cmds = $command_nightly->set_commands_to_run;
-                like($cmds->[0], qr/setRunId=.*?\^user=croneyDew\^browser=fake_browser \(set\)\^setName=fake.set\^host=fake_host/);
+                like($cmds->[0], qr/browser=fake_browser \(set\)\^host=fake_host\^setName=fake.set\^setRunId=.*?\^user=croneyDew/);
             };
 
             it 'should include the local address if applicable' => sub {
@@ -241,10 +241,8 @@ describe 'Nightly' => sub {
             # note that the executed.feature isn't in this list since
             # it's already included in the sub mock_actual_features()
             # below
-            is_deeply( $cmds, [ 'feature=/Users/dgempesaw/opt/Honeydew-Queue/t/fixture/features/missing.feature^setRunId=unique^user=croneyDew^browser=Localhost (set)^setName=fake.set^host=Chrome' ] );
+            is_deeply( $cmds, [ 'browser=Localhost (set)^feature=/Users/dgempesaw/opt/Honeydew-Queue/t/fixture/features/missing.feature^host=Chrome^setName=fake.set^setRunId=unique^user=croneyDew' ] );
         };
-
-
     };
 };
 
