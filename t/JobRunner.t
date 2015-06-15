@@ -4,7 +4,7 @@ use Test::More;
 use Honeydew::Queue::JobRunner;
 
 plan skip_all => 'Tests are not ready for outside use'
-  unless $ENV{HDEW_TESTS};
+  unless -d '/opt/honeydew';
 
 my $executable = "/opt/honeydew/bin/honeydew.pl";
 my $feature = "/opt/honeydew/features/tests/url-regex.feature";
