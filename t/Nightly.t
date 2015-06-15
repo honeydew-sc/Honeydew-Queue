@@ -183,11 +183,12 @@ describe 'Nightly' => sub {
 
             mock_actual_features( $dbh );
             my $actual_features = $nightly->actual_features;
-            is_deeply( $actual_features,
-                       { 'actual.set' => [ 'executed.feature' ] } );
+            is_deeply( $actual_features, {
+                'actual.set' => [ 'executed.feature' ]
+            } );
         };
 
-        it 'should figure out which features are run and missing' => sub {
+        it 'should figure out which features are missing' => sub {
             my $nightly = Honeydew::Queue::Nightly->new(
                 dbh => $dbh,
                 config => $config,
@@ -198,7 +199,7 @@ describe 'Nightly' => sub {
                     ]
                 },
                 actual_sets => {
-                    1 => 'fake.set'
+                    1 => 'fake.set Chrome Localhost'
                 }
             );
 
