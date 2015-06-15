@@ -207,12 +207,42 @@ describe 'Nightly' => sub {
             my $features_to_run = $nightly->feature_run_status;
 
             is_deeply( $features_to_run, {
-                '1 fake.set' => {
+                '1 fake.set Chrome Localhost' => {
                     'executed.feature' => 1,
                     'missing.feature' => 0
                 }
             });
         };
+
+        it 'should produce a filtered list of filter commands ' => sub {
+            my $nightly = Honeydew::Queue::Nightly->new(
+                dbh => $dbh,
+                # in config, the features_dir is set to
+                # __DIR__/fixture/features. feature_commands_to_run
+                # depends on this value
+                config => $config,
+                all_expected_features => {
+                    'fake.set' => [
+                        'executed.feature',
+                        'missing.feature'
+                    ]
+                },
+                actual_sets => {
+                    1 => 'fake.set Chrome Localhost'
+                }
+            );
+
+            mock_actual_sets( $dbh );
+            mock_actual_features( $dbh );
+            mock_set_run_ids( $dbh );
+            my $cmds = $nightly->feature_commands_to_run;
+
+            # note that the executed.feature isn't in this list since
+            # it's already included in the sub mock_actual_features()
+            # below
+            is_deeply( $cmds, [ 'feature=/Users/dgempesaw/opt/Honeydew-Queue/t/fixture/features/missing.feature^setRunId=unique^user=croneyDew^browser=Localhost (set)^setName=fake.set^host=Chrome' ] );
+        };
+
 
     };
 };
@@ -250,6 +280,18 @@ sub mock_actual_features {
         results => [
             [ 'featureFile'      ],
             [ 'executed.feature' ]
+        ]
+    };
+}
+
+sub mock_set_run_ids {
+    my ($dbh) = @_;
+
+    $dbh->{mock_add_resultset} = {
+        sql => 'SELECT setRunUnique as setRunId from setRun where id = ?',
+        results => [
+            [ 'setRunId' ],
+            [ 'unique' ]
         ]
     };
 }

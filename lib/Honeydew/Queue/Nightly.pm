@@ -3,6 +3,7 @@ package Honeydew::Queue::Nightly;
 # ABSTRACT: Accumulate sets and features for nightly enqueueing
 use Moo;
 use feature qw/state/;
+use Cwd qw/abs_path/;
 use File::Spec;
 use Honeydew::Config;
 
@@ -264,6 +265,8 @@ has feature_run_status => (
         my $actual_sets = $self->actual_sets;
 
         my $missing_features = missing_features( $expected_features, $actual_features, $actual_sets );
+
+        return $missing_features;
     }
 );
 
@@ -315,6 +318,48 @@ sub missing_features {
     }
 
     return $feature_count;
+}
+
+has feature_commands_to_run => (
+    is => 'lazy',
+    default => sub {
+        my ($self) = @_;
+        my $dbh = $self->dbh;
+        my $missing_features = $self->feature_run_status;
+
+        my @rerun;
+        my $sth = $dbh->prepare('SELECT setRunUnique as setRunId from setRun where id = ?');
+
+        my $features_dir = $self->config->features_dir;
+        foreach (keys %$missing_features) {
+            my ($id, $monitor) = split(' ', $_, 2);
+            my $metadata = $self->_job_from_monitor($monitor);
+
+            # The already has a pre-existing setRunId; we need to provide
+            # it to the feature so it knows what to do
+            $sth->execute($id);
+            my $setRunId = $sth->fetchrow_arrayref->[0];
+            $metadata->{setRunId} = $setRunId;
+
+            my $features = $missing_features->{$_};
+            my $skipped_features = _get_missing($features);
+
+            foreach (@$skipped_features) {
+                my $job = $metadata;
+                $job->{feature} = abs_path($features_dir . "/" . $_);
+
+                push(@rerun, _get_command($job) );
+            }
+        }
+
+        return \@rerun;
+    }
+);
+
+sub _get_missing {
+    my ($count_hash) = @_;
+
+    return [ grep { not $count_hash->{$_} } keys %$count_hash ];
 }
 
 1;
