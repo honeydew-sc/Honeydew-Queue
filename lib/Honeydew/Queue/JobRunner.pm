@@ -11,10 +11,9 @@ use Honeydew::Config;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(run_job args_to_options_hash);
 
-my($featuresDir) = "/opt/honeydew/features";
-my($setsDir) = "/opt/honeydew/sets";
-
 my $config = Honeydew::Config->instance;
+my $features_dir = $config->features_dir;
+my $sets_dir = $config->sets_dir;
 
 sub run_job {
     my($args) = shift || return;
@@ -23,86 +22,86 @@ sub run_job {
     my(%data) = args_to_options_hash($args);
 
     if ((!$data{feature} && !$data{setName}) || !$data{host} || !$data{user}) {
-        my $errString = "ERROR: $args: feature: " . $data{feature} .
+        my $error_msg = "ERROR: $args: feature: " . $data{feature} .
           ", host: " . $data{host} .
           ", user: " . $data{user};
-        jobLog($errString);
+        job_log($error_msg);
         return();
     }
 
     my $libs = $config->{perl}->{libs};
     my @libs = grep $_, split(/\s*-I\s*/, $libs);
 
-    my @nonSudoLibs = (
+    my @non_sudo_libs = (
         "/opt/honeydew/lib",
         "/home/honeydew/perl5/lib/perl5",
     );
 
-    my $baseCommand = "perl ";
-    foreach (@nonSudoLibs, @libs) {
-        $baseCommand .= " -I$_ " if -d $_;
+    my $base_command = "perl ";
+    foreach (@non_sudo_libs, @libs) {
+        $base_command .= " -I$_ " if -d $_;
     }
     my $user = delete($data{user});
-    $baseCommand .= " /opt/honeydew/bin/honeydew.pl -database -user=" . $user . " ";
+    $base_command .= " /opt/honeydew/bin/honeydew.pl -database -user=" . $user . " ";
 
     # If there is a feature set passed in, treat it like a group of
     # individual features. If we have a set _and_ a feature, it means
     # we're requeueing a missed feature, and we don't want to do the
     # whole set.
     if ($data{setName} && !$data{feature}) {
-        $baseCommand .= " -local=$data{local}" if $data{local};
-        $data{setName} = "$setsDir/$data{setName}" if $data{setName} !~ /^$setsDir/;
+        $base_command .= " -local=$data{local}" if $data{local};
+        $data{setName} = "$sets_dir/$data{setName}" if $data{setName} !~ /^$sets_dir/;
 
-        updateSet($data{setName});
+        update_set($data{setName});
         if (open(IN, "<", "$data{setName}")) {
-            my @setJobs;
+            my @set_jobs;
             my(@sets) = <IN>;
             close(IN);
 
             # we want to avoid wasting time on empty files
-            @sets = grep { chomp; -f "/opt/honeydew/features/" . $_} @sets;
+            @sets = grep { chomp; -f $features_dir . "/$_" } @sets;
 
             foreach my $feature (@sets) {
-                my $cmd = $baseCommand;
+                my $cmd = $base_command;
                 $feature =~ s/\r|\n//;
-                if ($feature !~ /^$featuresDir/) {
-                    $feature = "$featuresDir/$feature";
+                if ($feature !~ /^$features_dir/) {
+                    $feature = "$features_dir/$feature";
                 }
 
                 $cmd .= " -feature=$feature";
-                $cmd = appendOptions($cmd, \%data);
+                $cmd = append_options($cmd, \%data);
 
                 try {
                     queue_job($cmd, $test);
-                    push @setJobs, $cmd;
+                    push @set_jobs, $cmd;
                 }
                 catch {
-                    my $errString = "ERROR: $_. set: $data{setName}. user: $user.\nERROR: cmd: $cmd.";
-                    jobLog($errString);
+                    my $error_msg = "ERROR: $_. set: $data{setName}. user: $user.\nERROR: cmd: $cmd.";
+                    job_log($error_msg);
                 };
             }
 
-            maybe_start_private_worker ( $baseCommand, \%data );
-            return @setJobs;
+            maybe_start_private_worker ( $base_command, \%data );
+            return @set_jobs;
         }
         else {
-            jobLog("Error opening set file: $data{setName} => $!");
+            job_log("Error opening set file: $data{setName} => $!");
             return "$data{setName}";
         }
     }
     else {
         # otherwise, just run the single feature
-        my $cmd = $baseCommand;
+        my $cmd = $base_command;
 
-        $cmd = appendOptions($cmd, \%data);
+        $cmd = append_options($cmd, \%data);
 
-        jobLog($cmd);
+        job_log($cmd);
         system $cmd unless $test eq "test";
         return $cmd;
     }
 }
 
-sub appendOptions {
+sub append_options {
     my ($string, $data) = @_;
 
     # shallow copy options to preserve sauce=true across multiple
@@ -134,12 +133,12 @@ sub args_to_options_hash {
     return(%h);
 }
 
-sub updateSet {
+sub update_set {
     my $set = shift;
-    my $features = shift || $featuresDir;
+    my $features = shift || $features_dir;
     my $setFilename = $set;
     $set =~ s/.*sets\/(.*)\.set$/$1/;
-    my $findFeatures = 'cd ' . $featuresDir . ' && grep -rl -P "^Set:.*?\b' . $set . '\b" .';
+    my $findFeatures = 'cd ' . $features_dir . ' && grep -rl -P "^Set:.*?\b' . $set . '\b" .';
     my $setFeatures = `$findFeatures`;
 
     open (my $fh, ">", $setFilename);
@@ -147,7 +146,7 @@ sub updateSet {
     close ($fh);
 }
 
-sub jobLog {
+sub job_log {
     my ($msg) = @_;
 
     my $now = localtime;
@@ -191,13 +190,13 @@ sub queue_job {
     });
 
     if ($cmd =~ /croneydew/i) {
-        jobLog("SET QUEUE: $res, add $cmd");
+        job_log("SET QUEUE: $res, add $cmd");
     }
 }
 
 sub maybe_start_private_worker {
     my ($base, $data) = @_;
-    my $queue = choose_queue(appendOptions($base, $data));
+    my $queue = choose_queue(append_options($base, $data));
 
     my $background_channel = $config->{redis_background_channel};
     # Start up an individual worker for each set with a channel. We
