@@ -14,6 +14,8 @@ our @EXPORT_OK = qw(run_job args_to_options_hash);
 my $config = Honeydew::Config->instance;
 my $features_dir = $config->features_dir;
 my $sets_dir = $config->sets_dir;
+my $hdew_bin = $config->{honeydew}->{basedir} . "bin";
+my $hdew_lib = $config->{honeydew}->{basedir} . "lib";
 
 sub run_job {
     my($args) = shift || return;
@@ -33,7 +35,7 @@ sub run_job {
     my @libs = grep $_, split(/\s*-I\s*/, $libs);
 
     my @non_sudo_libs = (
-        "/opt/honeydew/lib",
+        $hdew_lib,
         "/home/honeydew/perl5/lib/perl5",
     );
 
@@ -42,7 +44,7 @@ sub run_job {
         $base_command .= " -I$_ " if -d $_;
     }
     my $user = delete($data{user});
-    $base_command .= " /opt/honeydew/bin/honeydew.pl -database -user=" . $user . " ";
+    $base_command .= " $hdew_bin/honeydew.pl -database -user=" . $user . " ";
 
     # If there is a feature set passed in, treat it like a group of
     # individual features. If we have a set _and_ a feature, it means
@@ -152,7 +154,7 @@ sub job_log {
     my $now = localtime;
     $msg = '[' . $now . '] ' . $msg;
 
-    `echo '$msg' >> /opt/honeydew/bin/job.log`;
+    `echo '$msg' >> $hdew_bin/job.log`;
 }
 
 sub choose_queue {
@@ -206,7 +208,7 @@ sub maybe_start_private_worker {
     # want their sets to run immediately.
     if ($queue =~ /^private\-/) {
         local @ARGV = ( $queue );
-        my $ret = do '/opt/honeydew/bin/manual_set_worker.pl';
+        my $ret = do $hdew_bin . '/manual_set_worker.pl';
     }
 
     # If there is no channel on the job, we can let our background
