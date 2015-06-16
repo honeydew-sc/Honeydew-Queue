@@ -241,7 +241,8 @@ describe 'Nightly' => sub {
             # note that the executed.feature isn't in this list since
             # it's already included in the sub mock_actual_features()
             # below
-            is_deeply( $cmds, [ 'browser=Localhost (set)^feature=/Users/dgempesaw/opt/Honeydew-Queue/t/fixture/features/missing.feature^host=Chrome^setName=fake.set^setRunId=unique^user=croneyDew' ] );
+            like( $cmds->[0], qr/browser=Localhost \(set\)\^feature=.*?t\/fixture\/features\/missing\.feature\^host=Chrome\^setName=fake.set\^setRunId=unique\^user=croneyDew/);
+            is( scalar @$cmds, 1 );
         };
     };
 };
