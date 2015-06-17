@@ -343,9 +343,9 @@ describe 'Nightly' => sub {
                 } @queued_commands;
 
                 my @expected = [
-                    'perl  t/fixture/bin/honeydew.pl -database  -feature=t/fixture/features/missing.feature -setRunId=unique -browser="fake_browser (set)" -user=croneyDew -setName=t/fixture/sets/fake.set -host=fake_host',
-                    'perl  t/fixture/bin/honeydew.pl -database  -feature=t/fixture/features/missing.feature -setRunId=unique -user=croneyDew -browser="Chrome (set)" -setName=fake.set -host=Localhost',
-                    'perl  t/fixture/bin/honeydew.pl -database  -feature=t/fixture/features/missing2.feature -setRunId=unique -user=croneyDew -browser="Chrome (set)" -setName=fake.set -host=Localhost'
+                    'perl  t/fixture/bin/honeydew.pl -database  -browser="Chrome (set)" -feature=t/fixture/features/missing.feature -host=Localhost -setName=fake.set -setRunId=unique -user=croneyDew',
+                    'perl  t/fixture/bin/honeydew.pl -database  -browser="Chrome (set)" -feature=t/fixture/features/missing2.feature -host=Localhost -setName=fake.set -setRunId=unique -user=croneyDew',
+                    'perl  t/fixture/bin/honeydew.pl -database  -browser="fake_browser (set)" -feature=t/fixture/features/missing.feature -host=fake_host -setName=t/fixture/sets/fake.set -setRunId=unique -user=croneyDew'
                 ];
 
                 is_deeply( \@uniform_commands, @expected );

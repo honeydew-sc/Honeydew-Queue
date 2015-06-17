@@ -166,7 +166,7 @@ sub append_options {
 
     $string .= delete($options->{sauce}) ? " -sauce" : "";
 
-    foreach (keys %$options) {
+    foreach (sort keys %$options) {
         my $val = $options->{$_};
         my $q =  $val =~ / / ? '"' : '';
         $string .= " -" . $_ . "=". $q . $val . $q;
