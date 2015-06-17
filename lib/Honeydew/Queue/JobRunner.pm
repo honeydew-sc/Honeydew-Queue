@@ -262,9 +262,8 @@ sub construct_base_command {
 
     my $base_command = $self->_base_command;
 
-    my $user = delete($data{user});
     my $hdew_bin = $self->hdew_bin;
-    $base_command .= " $hdew_bin/honeydew.pl -database -user=" . $user . " ";
+    $base_command .= " $hdew_bin/honeydew.pl -database ";
 
     return $base_command;
 }
