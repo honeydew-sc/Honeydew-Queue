@@ -17,9 +17,24 @@ my $sets_dir = $config->sets_dir;
 my $hdew_bin = $config->{honeydew}->{basedir} . "bin";
 my $hdew_lib = $config->{honeydew}->{basedir} . "lib";
 
+my $resque;
 sub run_job {
     my($args) = shift || return;
     my($test) = shift || "";
+
+    # Ideally, we'd use DI to establish our resque instance, but this
+    # package isn't set up with Moo, and it would require some
+    # refactoring to pass $self all the way through to where we use
+    # resque in queue_job. So, instead, we're making $resque a global
+    # variable and manually figuring out what it needs to be here,
+    # BEFORE we get into queue_job.
+    my($di_resque) = shift || '';
+    if ($di_resque) {
+        $resque = $di_resque;
+    }
+    else {
+        $resque = Resque->new( redis => $config->redis_addr );
+    }
 
     my(%data) = args_to_options_hash($args);
 
@@ -180,7 +195,7 @@ sub choose_queue {
 sub queue_job {
     my ($cmd, $test) = @_;
 
-    my $r = Resque->new( redis => $config->redis_addr );
+    my $r = $resque;
     my $queue = choose_queue($cmd);
 
     my $res = $r->push( $queue => {
