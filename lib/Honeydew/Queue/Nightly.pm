@@ -2,7 +2,7 @@ package Honeydew::Queue::Nightly;
 
 # ABSTRACT: Accumulate sets and features for nightly enqueueing
 use Moo;
-use feature qw/state/;
+use feature qw/state say/;
 use Cwd qw/abs_path/;
 use File::Spec;
 use Honeydew::Config;
@@ -52,6 +52,11 @@ has run_all => (
         return 0 unless scalar @ARGV >= 2;
         return $ARGV[1] eq 'all';
     }
+);
+
+has execute => (
+    is => 'lazy',
+    default => sub { 0 }
 );
 
 has sets_to_run => (
@@ -388,7 +393,13 @@ sub enqueue_all {
     );
 
     my $commands = $self->all_commands_to_run;
-    $runner->run_job( $_ ) for @$commands;
+
+    if ($self->execute) {
+        $runner->run_job( $_ ) for @$commands;
+    }
+    else {
+        say $_ for @$commands;
+    }
 }
 
 1;

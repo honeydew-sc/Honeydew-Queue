@@ -275,7 +275,8 @@ describe 'Nightly' => sub {
                 },
                 actual_sets => {
                     1 => 'fake.set Localhost Chrome'
-                }
+                },
+                execute => 1
             );
 
             $redis_server = get_redis_server();
