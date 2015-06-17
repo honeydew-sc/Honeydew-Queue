@@ -19,7 +19,10 @@ section appended to the end of it.
 
 my $crontab = [
     '# clear the nightly queues before we start the nightlies',
-    '0 20 * * * source ~/.bashrc; hd-reset-nightlies'
+    '00 20 * * * source ~/.bashrc; hd-reset-nightlies',
+    '',
+    '# start the nightlies slightly after 8pm.',
+    '10 20 * * * source ~/.bashrc; hd-queue-nightlies --execute --all > /home/honeydew/8pm 2>&1'
 ];
 
 say $_ for @{ add_crontab_section( 'queue', $crontab ) };

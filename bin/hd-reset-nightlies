@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 
-# PODNAME: reset-nightlies
+# PODNAME: hd-reset-nightlies
 use strict;
 use warnings;
 use feature qw/say/;
