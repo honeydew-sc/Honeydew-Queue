@@ -295,13 +295,14 @@ describe 'Nightly' => sub {
 
             foreach (@$cmds) {
                 $_ =~ s/setRunId=.*\^/setRunId=unique^/;
+                $_ =~ s{feature=.*(t/fixture/features/missing2?\.feature)}{feature=$1};
             }
 
             my $expected_cmds = [
                 'browser=fake_browser (set)^host=fake_host^setName=fake.set^setRunId=unique^user=croneyDew',
                 'browser=other_fake_browser (set)^host=other_fake_host^setName=other_fake2.set^setRunId=unique^user=croneyDew',
-                'browser=Chrome (set)^feature=/Users/dgempesaw/opt/Honeydew-Queue/t/fixture/features/missing.feature^host=Localhost^setName=fake.set^setRunId=unique^user=croneyDew',
-                'browser=Chrome (set)^feature=/Users/dgempesaw/opt/Honeydew-Queue/t/fixture/features/missing2.feature^host=Localhost^setName=fake.set^setRunId=unique^user=croneyDew'
+                'browser=Chrome (set)^feature=t/fixture/features/missing.feature^host=Localhost^setName=fake.set^setRunId=unique^user=croneyDew',
+                'browser=Chrome (set)^feature=t/fixture/features/missing2.feature^host=Localhost^setName=fake.set^setRunId=unique^user=croneyDew'
             ];
 
             is_deeply( $cmds, $expected_cmds );
@@ -334,18 +335,21 @@ describe 'Nightly' => sub {
                 my @queued_jobs = $resque->peek('test_channel', 0, -1);
                 my @queued_commands = map { $_->args->[0]->{cmd} } @queued_jobs;
 
-                my @uniform_commands = sort map { $_ =~ s/setRunId=[^ ]*/setRunId=unique/; $_ } @queued_commands;
+                my @uniform_commands = sort map {
+                    $_ =~ s/setRunId=[^ ]*/setRunId=unique/;
+                    $_ =~ s{[^ =]*(t/fixture/[^ ]*)}{$1}g;
+                    $_
+                } @queued_commands;
 
                 my @expected = [
-                    'perl  /Users/dgempesaw/opt/Honeydew-Queue/t/fixture/bin/honeydew.pl -database  -feature=/Users/dgempesaw/opt/Honeydew-Queue/t/fixture/features/missing.feature -setRunId=unique -browser="fake_browser (set)" -user=croneyDew -setName=/Users/dgempesaw/opt/Honeydew-Queue/t/fixture/sets/fake.set -host=fake_host',
-                    'perl  /Users/dgempesaw/opt/Honeydew-Queue/t/fixture/bin/honeydew.pl -database  -feature=/Users/dgempesaw/opt/Honeydew-Queue/t/fixture/features/missing.feature -setRunId=unique -user=croneyDew -browser="Chrome (set)" -setName=fake.set -host=Localhost',
-                    'perl  /Users/dgempesaw/opt/Honeydew-Queue/t/fixture/bin/honeydew.pl -database  -feature=/Users/dgempesaw/opt/Honeydew-Queue/t/fixture/features/missing2.feature -setRunId=unique -user=croneyDew -browser="Chrome (set)" -setName=fake.set -host=Localhost'
+                    'perl  t/fixture/bin/honeydew.pl -database  -feature=t/fixture/features/missing.feature -setRunId=unique -browser="fake_browser (set)" -user=croneyDew -setName=t/fixture/sets/fake.set -host=fake_host',
+                    'perl  t/fixture/bin/honeydew.pl -database  -feature=t/fixture/features/missing.feature -setRunId=unique -user=croneyDew -browser="Chrome (set)" -setName=fake.set -host=Localhost',
+                    'perl  t/fixture/bin/honeydew.pl -database  -feature=t/fixture/features/missing2.feature -setRunId=unique -user=croneyDew -browser="Chrome (set)" -setName=fake.set -host=Localhost'
                 ];
 
                 is_deeply( \@uniform_commands, @expected );
             }
         };
-
 
         after each => sub {
             delete $config->{redis};
