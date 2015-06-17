@@ -3,6 +3,7 @@ package Honeydew::Queue::JobRunner;
 # ABSTRACT: Dispatch manual and resque Honeydew jobs
 use strict;
 use warnings;
+use feature qw/state say/;
 use Cwd qw/abs_path/;
 use Try::Tiny;
 use Resque;
@@ -39,7 +40,7 @@ has hdew_bin => (
     default => sub {
         my ($self) = @_;
         my $config = $self->config;
-        return $config->{honeydew}->{basedir} . "bin";
+        return $config->{honeydew}->{basedir} . "/bin";
     }
 );
 
@@ -48,7 +49,7 @@ has hdew_lib => (
     default => sub {
         my ($self) = @_;
         my $config = $self->config;
-        return $config->{honeydew}->{basedir} . "lib";
+        return $config->{honeydew}->{basedir} . "/lib";
     }
 );
 
@@ -65,7 +66,7 @@ has _base_command => (
     default => sub {
         my ($self) = @_;
 
-        my $libs = $self->config->{perl}->{libs};
+        my $libs = $self->config->{perl}->{libs} || '';
         my @libs = grep $_, split(/\s*-I\s*/, $libs);
 
         my @non_sudo_libs = (
@@ -232,7 +233,7 @@ sub choose_queue {
         return $local_addresses->{$local};
     }
     else {
-        return $config->{redis}->{redis_background_channel};
+        return $config->{redis}->{redis_background_channel} || 'no_channel';
     }
 }
 
