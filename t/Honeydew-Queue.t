@@ -3,7 +3,6 @@ use warnings;
 use Honeydew::Queue;
 use Redis;
 use Resque;
-use Test::Deep;
 use Test::Spec;
 use Test::RedisServer;
 
@@ -19,14 +18,15 @@ describe 'Honeydew queue' => sub {
 
     before each => sub {
         $hq = Honeydew::Queue->new(
-            resque => Resque->new( redis => $redis )
+            resque => Resque->new( redis => $redis ),
+            config => {
+                local => {
+                    nightly_queue => 1,
+                    other_nightly_queue => 1,
+                }
+            }
         );
     };
-
-    after each => sub {
-        reset_resque($hq);
-    };
-
 
     it 'should tell us about the queues' => sub {
         seed_test_queues($hq, 'queue1', 'queue2');
@@ -40,23 +40,22 @@ describe 'Honeydew queue' => sub {
     };
 
     it 'should drop nightly queues' => sub {
-        seed_test_queues($hq, qw/ jenn_cs
-                                  carl_gp
-                                  pablo_qa
-                                  imac_52
-                                  jenn2_c5
-                                  screenshots
+        seed_test_queues($hq, qw/ nightly_queue
+                                  other_nightly_queue
+                                  not_nightly
                                   dont_drop_me /
                      );
 
         $hq->drop_nightly_queues;
         cmp_deeply( $hq->get_queues, {
-            screenshots => 1,
+            not_nightly => 1,
             dont_drop_me => 1
         });
     };
 
-
+    after each => sub {
+        reset_resque($hq);
+    };
 };
 
 sub seed_test_queues {
