@@ -201,7 +201,7 @@ describe 'Nightly' => sub {
                     ]
                 },
                 actual_sets => {
-                    1 => 'fake.set Chrome Localhost'
+                    1 => 'fake.set Localhost Chrome'
                 }
             );
 
@@ -210,7 +210,7 @@ describe 'Nightly' => sub {
             my $features_to_run = $nightly->feature_run_status;
 
             is_deeply( $features_to_run, {
-                '1 fake.set Chrome Localhost' => {
+                '1 fake.set Localhost Chrome' => {
                     'executed.feature' => 1,
                     'missing.feature' => 0
                 }
@@ -231,7 +231,7 @@ describe 'Nightly' => sub {
                     ]
                 },
                 actual_sets => {
-                    1 => 'fake.set Chrome Localhost'
+                    1 => 'fake.set Localhost Chrome'
                 }
             );
 
@@ -243,7 +243,7 @@ describe 'Nightly' => sub {
             # note that the executed.feature isn't in this list since
             # it's already included in the sub mock_actual_features()
             # below
-            like( $cmds->[0], qr/browser=Localhost \(set\)\^feature=.*?t\/fixture\/features\/missing\.feature\^host=Chrome\^setName=fake.set\^setRunId=unique\^user=croneyDew/);
+            like( $cmds->[0], qr/browser=Chrome \(set\)\^feature=.*?t\/fixture\/features\/missing\.feature\^host=Localhost\^setName=fake.set\^setRunId=unique\^user=croneyDew/);
             is( scalar @$cmds, 1 );
         };
     };
