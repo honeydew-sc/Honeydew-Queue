@@ -40,7 +40,9 @@ has hdew_bin => (
     default => sub {
         my ($self) = @_;
         my $config = $self->config;
-        return $config->{honeydew}->{basedir} . "/bin";
+        my $dir = $config->{honeydew}->{basedir} . "/bin";
+        $dir =~ s{//}{/}g;
+        return $dir;
     }
 );
 
@@ -49,7 +51,9 @@ has hdew_lib => (
     default => sub {
         my ($self) = @_;
         my $config = $self->config;
-        return $config->{honeydew}->{basedir} . "/lib";
+        my $dir = $config->{honeydew}->{basedir} . "/lib";
+        $dir =~ s{//}{/}g;
+        return $dir;
     }
 );
 

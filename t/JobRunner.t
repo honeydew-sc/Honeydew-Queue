@@ -76,8 +76,6 @@ Set: ' . $setName;
     );
 
     my @setJobs = $runner->run_job(join('^', @job), "test");
-    use Data::Dumper; use DDP;
-    p @setJobs;
     cmp_ok(scalar @setJobs, '==', 2, 'skip nonexistent files');
     my $command = $setJobs[0];
 
