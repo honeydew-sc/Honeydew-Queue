@@ -3,6 +3,7 @@ requires "DBD::mysql" => "0";
 requires "DBI" => "0";
 requires "DDP" => "0";
 requires "File::Spec" => "0";
+requires "Getopt::Long" => "0";
 requires "Honeydew::Config" => "0";
 requires "Honeydew::ExternalServices::Crontab" => "0";
 requires "Moo" => "0";
