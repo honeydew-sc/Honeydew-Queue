@@ -7,7 +7,10 @@ use DBI;
 use File::Temp qw/ tempfile /;
 use File::Basename qw/ dirname /;
 use File::Spec;
+use Test::RedisServer;
 use Test::Spec;
+use Redis;
+use Resque;
 
 use Honeydew::Config;
 use Honeydew::Queue::Nightly;
@@ -125,7 +128,6 @@ describe 'Nightly' => sub {
                 # run, so we should be dropping the invalid one.
                 is( scalar @$cmds, 2 );
             };
-
 
         };
 
@@ -245,6 +247,111 @@ describe 'Nightly' => sub {
             is( scalar @$cmds, 1 );
         };
     };
+
+    describe 'enqueing' => sub {
+        my ($nightly, $redis_server);
+
+        before each => sub {
+            mock_expected_sets( $dbh );
+            mock_actual_features( $dbh );
+            mock_set_run_ids( $dbh );
+            $config->{redis} = {
+                redis_background_channel => 'test_channel'
+            };
+
+            my %args = (
+                dbh => $dbh,
+                config => $config,
+                all_expected_features => {
+                    'fake.set' => [
+                        'executed.feature',
+                        'missing.feature',
+                        'missing2.feature'
+                    ],
+                    'other_fake2.set' => [
+                        'missing.feature',
+                        'missing2.feature'
+                    ],
+                },
+                actual_sets => {
+                    1 => 'fake.set Localhost Chrome'
+                }
+            );
+
+            $redis_server = get_redis_server();
+            if ($redis_server) {
+                $args{resque} = Resque->new(
+                    redis => Redis->new(
+                        $redis_server->connect_info
+                    )
+                );
+            }
+
+            $nightly = Honeydew::Queue::Nightly->new( %args );
+        };
+
+        it 'should consolidate all commands' => sub {
+            my $cmds = $nightly->all_commands_to_run;
+
+            foreach (@$cmds) {
+                $_ =~ s/setRunId=.*\^/setRunId=unique^/;
+            }
+
+            my $expected_cmds = [
+                'browser=fake_browser (set)^host=fake_host^setName=fake.set^setRunId=unique^user=croneyDew',
+                'browser=other_fake_browser (set)^host=other_fake_host^setName=other_fake2.set^setRunId=unique^user=croneyDew',
+                'browser=Chrome (set)^feature=/Users/dgempesaw/opt/Honeydew-Queue/t/fixture/features/missing.feature^host=Localhost^setName=fake.set^setRunId=unique^user=croneyDew',
+                'browser=Chrome (set)^feature=/Users/dgempesaw/opt/Honeydew-Queue/t/fixture/features/missing2.feature^host=Localhost^setName=fake.set^setRunId=unique^user=croneyDew'
+            ];
+
+            is_deeply( $cmds, $expected_cmds );
+        };
+
+        it 'should enqueue the correct number of commands' => sub {
+          SKIP: {
+                skip 'No temporary resque server available', 1
+                  unless $nightly->has_resque;
+
+                my $resque = $nightly->resque;
+                $nightly->enqueue_all;
+
+                # there are two features enqueued, and two sets
+                # enqueued. only one of the sets has one actual
+                # feature, so that gives three expected resque jobs in
+                # all.
+                is($resque->size('test_channel'), 3);
+            }
+        };
+
+        it 'should enqueue the correct commands' => sub {
+          SKIP: {
+                skip 'No temporary resque server available', 1
+                  unless $nightly->has_resque;
+
+                my $resque = $nightly->resque;
+                $nightly->enqueue_all;
+
+                my @queued_jobs = $resque->peek('test_channel', 0, -1);
+                my @queued_commands = map { $_->args->[0]->{cmd} } @queued_jobs;
+
+                my @uniform_commands = sort map { $_ =~ s/setRunId=[^ ]*/setRunId=unique/; $_ } @queued_commands;
+
+                my @expected = [
+                    'perl  /Users/dgempesaw/opt/Honeydew-Queue/t/fixture/bin/honeydew.pl -database  -feature=/Users/dgempesaw/opt/Honeydew-Queue/t/fixture/features/missing.feature -setRunId=unique -browser="fake_browser (set)" -user=croneyDew -setName=/Users/dgempesaw/opt/Honeydew-Queue/t/fixture/sets/fake.set -host=fake_host',
+                    'perl  /Users/dgempesaw/opt/Honeydew-Queue/t/fixture/bin/honeydew.pl -database  -feature=/Users/dgempesaw/opt/Honeydew-Queue/t/fixture/features/missing.feature -setRunId=unique -user=croneyDew -browser="Chrome (set)" -setName=fake.set -host=Localhost',
+                    'perl  /Users/dgempesaw/opt/Honeydew-Queue/t/fixture/bin/honeydew.pl -database  -feature=/Users/dgempesaw/opt/Honeydew-Queue/t/fixture/features/missing2.feature -setRunId=unique -user=croneyDew -browser="Chrome (set)" -setName=fake.set -host=Localhost'
+                ];
+
+                is_deeply( \@uniform_commands, @expected );
+            }
+        };
+
+
+        after each => sub {
+            delete $config->{redis};
+        };
+
+    };
 };
 
 sub mock_expected_sets {
@@ -256,6 +363,7 @@ sub mock_expected_sets {
             [ 'setName'        , 'host'            , 'browser'            ],
             [ 'fake.set'       , 'fake_host'       , 'fake_browser'       ],
             [ 'other_fake.set' , 'other_fake_host' , 'other_fake_browser' ],
+            [ 'other_fake2.set' , 'other_fake_host' , 'other_fake_browser' ],
         ]
     };
 }
@@ -294,6 +402,15 @@ sub mock_set_run_ids {
             [ 'unique' ]
         ]
     };
+}
+
+sub get_redis_server {
+    my $redis_server;
+    my $has_server = eval {
+        $redis_server = Test::RedisServer->new;
+    };
+
+    return $redis_server;
 }
 
 runtests;
