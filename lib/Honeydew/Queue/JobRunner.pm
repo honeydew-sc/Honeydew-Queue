@@ -3,73 +3,103 @@ package Honeydew::Queue::JobRunner;
 # ABSTRACT: Dispatch manual and resque Honeydew jobs
 use strict;
 use warnings;
-use Exporter;
+use Cwd qw/abs_path/;
 use Try::Tiny;
 use Resque;
 use Honeydew::Config;
+use Moo;
 
-our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(run_job args_to_options_hash);
+has config => (
+    is => 'lazy',
+    default => sub {
+        return Honeydew::Config->instance;
+    }
+);
 
-my $config = Honeydew::Config->instance;
-my $features_dir = $config->features_dir;
-my $sets_dir = $config->sets_dir;
-my $hdew_bin = $config->{honeydew}->{basedir} . "bin";
-my $hdew_lib = $config->{honeydew}->{basedir} . "lib";
+has features_dir => (
+    is => 'lazy',
+    default => sub {
+        my ($self) = @_;
+        my $config = $self->config;
+        return $config->features_dir;
+    }
+);
 
-my $resque;
+has sets_dir => (
+    is => 'lazy',
+    default => sub {
+        my ($self) = @_;
+        my $config = $self->config;
+        return $config->sets_dir;
+    }
+);
+
+has hdew_bin => (
+    is => 'lazy',
+    default => sub {
+        my ($self) = @_;
+        my $config = $self->config;
+        return $config->{honeydew}->{basedir} . "bin";
+    }
+);
+
+has hdew_lib => (
+    is => 'lazy',
+    default => sub {
+        my ($self) = @_;
+        my $config = $self->config;
+        return $config->{honeydew}->{basedir} . "lib";
+    }
+);
+
+has resque => (
+    is => 'lazy',
+    default => sub {
+        my ($self) = @_;
+        return Resque->new( redis => $self->config->redis_addr );
+    }
+);
+
+has _base_command => (
+    is => 'lazy',
+    default => sub {
+        my ($self) = @_;
+
+        my $libs = $self->config->{perl}->{libs};
+        my @libs = grep $_, split(/\s*-I\s*/, $libs);
+
+        my @non_sudo_libs = (
+            $self->hdew_lib,
+            "/home/honeydew/perl5/lib/perl5",
+        );
+
+        my $base_command = "perl ";
+        foreach (@non_sudo_libs, @libs) {
+            $base_command .= " -I$_ " if -d $_;
+        }
+
+        return $base_command;
+    }
+);
+
 sub run_job {
-    my($args) = shift || return;
-    my($test) = shift || "";
+    my ($self, $args, $test) = @_;
+    $test //= '';
 
-    # Ideally, we'd use DI to establish our resque instance, but this
-    # package isn't set up with Moo, and it would require some
-    # refactoring to pass $self all the way through to where we use
-    # resque in queue_job. So, instead, we're making $resque a global
-    # variable and manually figuring out what it needs to be here,
-    # BEFORE we get into queue_job.
-    my($di_resque) = shift || '';
-    if ($di_resque) {
-        $resque = $di_resque;
-    }
-    else {
-        $resque = Resque->new( redis => $config->redis_addr );
-    }
+    my(%data) = $self->args_to_options_hash($args);
+    my $base_command = $self->construct_base_command( %data );
 
-    my(%data) = args_to_options_hash($args);
-
-    if ((!$data{feature} && !$data{setName}) || !$data{host} || !$data{user}) {
-        my $error_msg = "ERROR: $args: feature: " . $data{feature} .
-          ", host: " . $data{host} .
-          ", user: " . $data{user};
-        job_log($error_msg);
-        return();
-    }
-
-    my $libs = $config->{perl}->{libs};
-    my @libs = grep $_, split(/\s*-I\s*/, $libs);
-
-    my @non_sudo_libs = (
-        $hdew_lib,
-        "/home/honeydew/perl5/lib/perl5",
-    );
-
-    my $base_command = "perl ";
-    foreach (@non_sudo_libs, @libs) {
-        $base_command .= " -I$_ " if -d $_;
-    }
-    my $user = delete($data{user});
-    $base_command .= " $hdew_bin/honeydew.pl -database -user=" . $user . " ";
-
+    my $sets_dir = $self->sets_dir;
+    my $features_dir = $self->features_dir;
     # If there is a feature set passed in, treat it like a group of
     # individual features. If we have a set _and_ a feature, it means
     # we're requeueing a missed feature, and we don't want to do the
     # whole set.
     if ($data{setName} && !$data{feature}) {
         $base_command .= " -local=$data{local}" if $data{local};
-        $data{setName} = "$sets_dir/$data{setName}" if $data{setName} !~ /^$sets_dir/;
+        $data{setName} = abs_path("$sets_dir/$data{setName}") if $data{setName} !~ /^$sets_dir/;
 
-        update_set($data{setName});
+        update_set($data{setName}, $features_dir);
         if (open(IN, "<", "$data{setName}")) {
             my @set_jobs;
             my(@sets) = <IN>;
@@ -79,43 +109,47 @@ sub run_job {
             @sets = grep { chomp; -f $features_dir . "/$_" } @sets;
 
             foreach my $feature (@sets) {
-                my $cmd = $base_command;
-                $feature =~ s/\r|\n//;
-                if ($feature !~ /^$features_dir/) {
-                    $feature = "$features_dir/$feature";
-                }
+                my $validated_feature = $self->validate_feature( $feature );
+                next unless $validated_feature;
 
-                $cmd .= " -feature=$feature";
-                $cmd = append_options($cmd, \%data);
+                my %this_data = %data;
+                $this_data{feature} = $validated_feature;
 
-                try {
-                    queue_job($cmd, $test);
-                    push @set_jobs, $cmd;
-                }
-                catch {
-                    my $error_msg = "ERROR: $_. set: $data{setName}. user: $user.\nERROR: cmd: $cmd.";
-                    job_log($error_msg);
-                };
+                my $cmd = $self->prepare_and_queue( $base_command, \%this_data, $test );
+                push @set_jobs, $cmd;
             }
 
-            maybe_start_private_worker ( $base_command, \%data );
             return @set_jobs;
         }
         else {
-            job_log("Error opening set file: $data{setName} => $!");
+            $self->log("Error opening set file: $data{setName} => $!");
             return "$data{setName}";
         }
     }
     else {
-        # otherwise, just run the single feature
-        my $cmd = $base_command;
-
-        $cmd = append_options($cmd, \%data);
-
-        job_log($cmd);
-        system $cmd unless $test eq "test";
-        return $cmd;
+        return $self->prepare_and_queue( $base_command, \%data, $test );
     }
+}
+
+sub validate_feature {
+    my ($self, $feature) = @_;
+    my $features_dir = $self->features_dir;
+
+    $feature =~ s/\r|\n//;
+    if ($feature !~ /^$features_dir/) {
+        $feature = "$features_dir/$feature";
+        $feature = abs_path($feature);
+    }
+
+    return $feature;
+}
+
+sub prepare_and_queue {
+    my ($self, $cmd, $data, $test) = @_;
+
+    $cmd = append_options($cmd, $data);
+    $self->queue_job($cmd, $test);
+    return $cmd;
 }
 
 sub append_options {
@@ -137,22 +171,30 @@ sub append_options {
 }
 
 sub args_to_options_hash {
-    my($str) = shift || return;
-    my(%h);
+    my($self, $str) = @_;
 
+    my(%data);
     my(@data) = split(/\^/, $str);
 
     foreach my $line (@data) {
         my($k, $v) = split(/=/, $line, 2);
-        $h{$k} = $v;
+        $data{$k} = $v;
     }
 
-    return(%h);
+    if ((!$data{feature} && !$data{setName}) || !$data{host} || !$data{user}) {
+        my $error_msg = "ERROR $str: feature: " . $data{feature} .
+          ", host: " . $data{host} .
+          ", user: " . $data{user};
+        $self->log($error_msg);
+        die $error_msg;
+    }
+
+    return(%data);
 }
 
 sub update_set {
-    my $set = shift;
-    my $features = shift || $features_dir;
+    my ($set, $features_dir) = @_;
+
     my $setFilename = $set;
     $set =~ s/.*sets\/(.*)\.set$/$1/;
     my $findFeatures = 'cd ' . $features_dir . ' && grep -rl -P "^Set:.*?\b' . $set . '\b" .';
@@ -163,8 +205,9 @@ sub update_set {
     close ($fh);
 }
 
-sub job_log {
-    my ($msg) = @_;
+sub log {
+    my ($self, $msg) = @_;
+    my $hdew_bin = $self->hdew_bin;
 
     my $now = localtime;
     $msg = '[' . $now . '] ' . $msg;
@@ -174,6 +217,7 @@ sub job_log {
 
 sub choose_queue {
     my $cmd = shift || return;
+    my $config = Honeydew::Config->instance;
 
     my ($user) = $cmd =~ m/-user=(\w+)/;
     my ($channel) = $cmd =~ m/-channel=(private-\w{8})/;
@@ -193,11 +237,12 @@ sub choose_queue {
 }
 
 sub queue_job {
-    my ($cmd, $test) = @_;
+    my ($self, $cmd, $test) = @_;
 
-    my $r = $resque;
+    my $r = $self->resque;
     my $queue = choose_queue($cmd);
 
+    $self->log($cmd);
     my $res = $r->push( $queue => {
         class => 'Honeydew::Job',
         args => [{
@@ -207,28 +252,20 @@ sub queue_job {
     });
 
     if ($cmd =~ /croneydew/i) {
-        job_log("SET QUEUE: $res, add $cmd");
+        $self->log("SET QUEUE: $res, add $cmd");
     }
 }
 
-sub maybe_start_private_worker {
-    my ($base, $data) = @_;
-    my $queue = choose_queue(append_options($base, $data));
+sub construct_base_command {
+    my ($self, %data) = @_;
 
-    my $background_channel = $config->{redis_background_channel};
-    # Start up an individual worker for each set with a channel. We
-    # don't want two workers on a single set, because things will run
-    # out of order and the output will be garbled. We don't want to
-    # share a single set's workers with other users, because users
-    # want their sets to run immediately.
-    if ($queue =~ /^private\-/) {
-        local @ARGV = ( $queue );
-        my $ret = do $hdew_bin . '/manual_set_worker.pl';
-    }
+    my $base_command = $self->_base_command;
 
-    # If there is no channel on the job, we can let our background
-    # workers take care of it; they manage themselves, so we don't
-    # have to do anything.
+    my $user = delete($data{user});
+    my $hdew_bin = $self->hdew_bin;
+    $base_command .= " $hdew_bin/honeydew.pl -database -user=" . $user . " ";
+
+    return $base_command;
 }
 
 1;

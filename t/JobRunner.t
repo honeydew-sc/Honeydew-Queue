@@ -1,10 +1,11 @@
 use strict;
 use warnings;
 use Test::More;
-use Honeydew::Queue::JobRunner;
 
 plan skip_all => 'Tests are not ready for outside use'
   unless -d '/opt/honeydew';
+
+require Honeydew::Queue::JobRunner;
 
 my $executable = "/opt/honeydew/bin/honeydew.pl";
 my $feature = "/opt/honeydew/features/tests/url-regex.feature";
@@ -15,6 +16,8 @@ my $sauce = "true";
 my $user = "testdew";
 my $channel = "hello";
 my $size="434x343";
+
+my $runner = Honeydew::Queue::JobRunner->new;
 
 QUEUE: {
     my $cmd = '/usr/bin/perl  -I/opt/honeydew/lib  /opt/honeydew/bin/honeydew.pl -database -user=testdew  -feature=/opt/honeydew/features/./fake2.feature -setRunId=kqjafxdd -browser="Windows 2003 - chrome Local" -channel=private-asdfasdf -setName=/opt/honeydew/sets/testing.set -host=http://localhost';
@@ -72,7 +75,9 @@ Set: ' . $setName;
         "channel=private-asdfasdf"
     );
 
-    my @setJobs = Honeydew::Queue::JobRunner::run_job(join('^', @job), "test");
+    my @setJobs = $runner->run_job(join('^', @job), "test");
+    use Data::Dumper; use DDP;
+    p @setJobs;
     cmp_ok(scalar @setJobs, '==', 2, 'skip nonexistent files');
     my $command = $setJobs[0];
 
@@ -100,7 +105,7 @@ Set: ' . $setName;
 REPLACE_FEATURE: {
     my $reportId = '123456789';
     my $job = "feature=$feature^host=$host^user=$user^browser=$browser^reportId=$reportId^size=$size";
-    my $replaceJob = Honeydew::Queue::JobRunner::run_job($job, "test");
+    my $replaceJob = $runner->run_job($job, "test");
 
     cmp_ok($replaceJob, "=~", qr/ \-reportId=.*$reportId/, "reportId is added correctly for single replace jobs");
     cmp_ok($replaceJob, "=~", qr/ \-size=$size/, "size is added correctly for single replace jobs");
@@ -108,7 +113,7 @@ REPLACE_FEATURE: {
 
 FEATURE: {
     my $job = "feature=$feature^host=$host^user=$user^sauce=true^browser=$browser";
-    my $command = Honeydew::Queue::JobRunner::run_job($job, "test");
+    my $command = $runner->run_job($job, "test");
 
     cmp_ok($command, "=~", qr/$executable/, "standard opt is constructed correctly");
     cmp_ok($command, "=~", qr/ \-database/, "standard database is constructed correctly");
@@ -120,7 +125,7 @@ FEATURE: {
     cmp_ok($command, '!~', qr/channel/, "normally doesn't get channel");
 
     $job = "feature=$feature^host=$host^user=$user^channel=$channel^browser=$browser";
-    $command = Honeydew::Queue::JobRunner::run_job($job, "test");
+    $command = $runner->run_job($job, "test");
 
     cmp_ok($command, "!~", qr/sauce/, "sauce doesn't show up when we don't expect it");
     cmp_ok($command, "=~", qr/ \-channel=$channel/, "standard channel is constructed correctly");
@@ -128,7 +133,7 @@ FEATURE: {
 
 REQUEUE_FEATURE: {
     my $job = "feature=$feature^host=$host^user=$user^browser=$browser^setName=setName";
-    my $ret = Honeydew::Queue::JobRunner::run_job($job, "test");
+    my $ret = $runner->run_job($job, "test");
     ok($ret, 'we can requeue a job by its setName and only run one feature');
 }
 
