@@ -210,10 +210,19 @@ sub log {
     my ($self, $msg) = @_;
     my $hdew_bin = $self->hdew_bin;
 
+    my $log_file = "$hdew_bin/job.log";
+    state $has_log_file = -f $log_file;
+
     my $now = localtime;
     $msg = '[' . $now . '] ' . $msg;
 
-    `echo '$msg' >> $hdew_bin/job.log`;
+    if ($has_log_file) {
+        `echo '$msg' >> $hdew_bin/job.log`;
+    }
+    else {
+        # say $msg;
+    }
+
 }
 
 sub choose_queue {
