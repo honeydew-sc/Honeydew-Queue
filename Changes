@@ -1,5 +1,9 @@
 Revision history for perl module Honeydew-Queue
 
+0.06 2015-06-18
+ - Create nightlies with Honeydew::Queue::Nightlies
+ - Enqueue jobs with Honeydew::Queue::JobRunner
+
 0.05 2015-06-11
  - Fix crontab command for resetting nightlies
 

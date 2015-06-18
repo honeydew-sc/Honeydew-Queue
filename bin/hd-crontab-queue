@@ -1,6 +1,7 @@
 #! /usr/bin/perl
 
-# PODNAME: hd-crontab-queue - append Honeydew::Queue business to your crontab
+# PODNAME: hd-crontab-queue
+# ABSTRACT:  append Honeydew::Queue business to your crontab
 use strict;
 use warnings;
 use feature qw/say/;
@@ -9,7 +10,10 @@ use Honeydew::ExternalServices::Crontab qw/add_crontab_section/;
 
 my $crontab = [
     '# clear the nightly queues before we start the nightlies',
-    '0 20 * * * source ~/.bashrc; hd-reset-nightlies'
+    '00 20 * * * source ~/.bashrc; hd-reset-nightlies',
+    '',
+    '# start the nightlies slightly after 8pm.',
+    '10 20 * * * source ~/.bashrc; hd-queue-nightlies --execute --all > /home/honeydew/8pm 2>&1'
 ];
 
 say $_ for @{ add_crontab_section( 'queue', $crontab ) };
@@ -26,7 +30,7 @@ hd-crontab-queue - append Honeydew::Queue business to your crontab
 
 =head1 VERSION
 
-version 0.05
+version 0.06
 
 =head1 SYNOPSIS
 

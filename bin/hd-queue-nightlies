@@ -1,0 +1,102 @@
+#! /usr/bin/perl
+
+# PODNAME: hd-queue-nightlies
+# ABSTRACT: shell script to queue nightlies
+use strict;
+use warnings;
+use Getopt::Long;
+use Honeydew::Queue::Nightly;
+
+
+my ($all, $execute) = ( 0, 0 );
+GetOptions(
+    'a|all' => \$all,
+    'e|execute' => \$execute
+);
+
+my $nightly = Honeydew::Queue::Nightly->new(
+    run_all => $all,
+    execute => $execute
+);
+
+$nightly->enqueue_all;
+
+__END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+hd-queue-nightlies - shell script to queue nightlies
+
+=head1 VERSION
+
+version 0.06
+
+=head1 SYNOPSIS
+
+ hd-queue-nightlies --execute --all
+
+ Options:
+   --execute         queue the jobs
+   --all             run all the monitors
+
+=head1 DESCRIPTION
+
+Collect the nightly runs and put them into the queue. Arguments:
+
+=over
+
+=item execute
+
+Use C<--execute> to actually put the items in the list. Otherwise,
+we'll collect everything, output it to STDOUT, and quit, and nothing
+will be queued.
+
+     hd-queue-nightlies --execute
+
+=item all
+
+Use C<--all> to queue up every feature of every set, without checking
+the database or the existing queues for what has already been
+run/queued.
+
+     hd-queue-nightlies --all
+
+=back
+
+=head1 SEE ALSO
+
+Please see those modules/websites for more information related to this module.
+
+=over 4
+
+=item *
+
+L<Honeydew::Queue|Honeydew::Queue>
+
+=back
+
+=head1 BUGS
+
+Please report any bugs or feature requests on the bugtracker website
+https://github.com/honeydew-sc/Honeydew-Queue/issues
+
+When submitting a bug or request, please include a test-file or a
+patch to an existing test-file that illustrates the bug or desired
+feature.
+
+=head1 AUTHOR
+
+Daniel Gempesaw <gempesaw@gmail.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2015 by Daniel Gempesaw.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut

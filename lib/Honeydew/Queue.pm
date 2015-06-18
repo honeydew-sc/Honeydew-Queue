@@ -1,5 +1,5 @@
 package Honeydew::Queue;
-$Honeydew::Queue::VERSION = '0.05';
+$Honeydew::Queue::VERSION = '0.06';
 # ABSTRACT: Manage Honeydew's nightly queue functionality
 
 use strict;
@@ -7,7 +7,6 @@ use warnings;
 use Honeydew::Config;
 use Moo;
 use Resque;
-
 
 
 has resque => (
@@ -81,7 +80,7 @@ Honeydew::Queue - Manage Honeydew's nightly queue functionality
 
 =head1 VERSION
 
-version 0.05
+version 0.06
 
 =head1 SYNOPSIS
 
