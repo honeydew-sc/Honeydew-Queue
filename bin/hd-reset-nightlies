@@ -1,6 +1,7 @@
 #! /usr/bin/perl
 
 # PODNAME: hd-reset-nightlies
+# ABSTRACT: clear the nightly queues
 use strict;
 use warnings;
 use feature qw/say/;

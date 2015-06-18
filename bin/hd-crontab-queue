@@ -1,6 +1,7 @@
 #! /usr/bin/perl
 
-# PODNAME: hd-crontab-queue - append Honeydew::Queue business to your crontab
+# PODNAME: hd-crontab-queue
+# ABSTRACT:  append Honeydew::Queue business to your crontab
 use strict;
 use warnings;
 use feature qw/say/;
