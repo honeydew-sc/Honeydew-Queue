@@ -1,0 +1,10 @@
+#! /usr/bin/perl
+
+# PODNAME: hd-queue-job
+# ABSTRACT: executable to add a single job to the queue
+use strict;
+use warnings;
+use Honeydew::Queue::JobRunner;
+
+my $runner = Honeydew::Queue::JobRunner->new;
+$runner->run_job( $_ ) for @ARGV;
