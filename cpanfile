@@ -6,6 +6,7 @@ requires "File::Spec" => "0";
 requires "Getopt::Long" => "0";
 requires "Honeydew::Config" => "0";
 requires "Honeydew::ExternalServices::Crontab" => "0";
+requires "List::Util" => "0";
 requires "Moo" => "0";
 requires "Resque" => "0";
 requires "Try::Tiny" => "0";
