@@ -234,11 +234,11 @@ sub choose_queue {
     my $config = Honeydew::Config->instance;
 
     my ($user) = $cmd =~ m/-user=(\w+)/;
-    my ($channel) = $cmd =~ m/-channel=(private-\w{8})/;
+    my ($channel) = $cmd =~ m/-channel=(private-[^ ]+)/;
     my ($local) = $cmd =~ m/-local=((?:\d{1,3}.?){4})/;
 
     if ($channel) {
-        return $channel . $user;
+        return $channel . '-' . $user;
     }
     elsif ($local) {
         $local =~ s/^\s+|\s+$//g;

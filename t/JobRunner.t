@@ -23,7 +23,7 @@ QUEUE: {
     my $cmd = '/usr/bin/perl  -I/opt/honeydew/lib  /opt/honeydew/bin/honeydew.pl -database -user=testdew  -feature=/opt/honeydew/features/./fake2.feature -setRunId=kqjafxdd -browser="Windows 2003 - chrome Local" -channel=private-asdfasdf -setName=/opt/honeydew/sets/testing.set -host=http://localhost';
 
     my $queue = Honeydew::Queue::JobRunner::choose_queue($cmd);
-    cmp_ok($queue, '=~', qr/^private\-/, 'private queues are named as such');
+    cmp_ok($queue, 'eq', 'private-asdfasdf-testdew', 'private queues are named properly to allow them to auto-reap when empty');
     cmp_ok($queue, '=~', qw/testdew/, 'Job with channel and user gets put in user\'s queue');
 
     $cmd =~ s/asdfasdf/qwerqwer/;
