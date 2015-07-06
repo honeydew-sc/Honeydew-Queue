@@ -6,7 +6,7 @@ Honeydew::Queue - Manage Honeydew's nightly queue functionality
 
 # VERSION
 
-version 0.07
+version 0.08
 
 # SYNOPSIS
 
