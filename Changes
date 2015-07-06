@@ -1,5 +1,8 @@
 Revision history for perl module Honeydew-Queue
 
+0.08 2015-07-06
+ - Loosen restrictions on queue names
+
 0.07 2015-06-30
  - Add a shell script for enqueueing a single feature
 
