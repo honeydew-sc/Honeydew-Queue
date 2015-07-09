@@ -17,7 +17,15 @@ my $user = "testdew";
 my $channel = "hello";
 my $size="434x343";
 
-my $runner = Honeydew::Queue::JobRunner->new;
+package Null {
+    my $null = bless {}, __PACKAGE__;
+    sub AUTOLOAD { $null }
+};
+
+my $runner = Honeydew::Queue::JobRunner->new(
+    report_class => Null->new
+);
+
 
 QUEUE: {
     my $cmd = '/usr/bin/perl  -I/opt/honeydew/lib  /opt/honeydew/bin/honeydew.pl -database -user=testdew  -feature=/opt/honeydew/features/./fake2.feature -setRunId=kqjafxdd -browser="Windows 2003 - chrome Local" -channel=private-asdfasdf -setName=/opt/honeydew/sets/testing.set -host=http://localhost';

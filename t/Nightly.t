@@ -255,9 +255,11 @@ describe 'Nightly' => sub {
             mock_expected_sets( $dbh );
             mock_actual_features( $dbh );
             mock_set_run_ids( $dbh );
+
             $config->{redis} = {
                 redis_background_channel => 'test_channel'
             };
+            $config->{perl} = { libs => '' };
 
             my %args = (
                 dbh => $dbh,
