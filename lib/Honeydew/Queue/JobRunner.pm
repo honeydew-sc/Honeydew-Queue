@@ -11,9 +11,8 @@ use Honeydew::Config 0.05;
 use Moo;
 use DBI;
 
-BEGIN: {
-    use if -d '/opt/honeydew/lib', lib => '/opt/honeydew/lib';
-    use if -d '/opt/honeydew/lib', 'Honeydew::Reports';
+if (-d '/opt/honeydew/lib') {
+    require Honeydew::Reports;
 }
 
 has config => (
