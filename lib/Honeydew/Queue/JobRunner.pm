@@ -7,8 +7,14 @@ use feature qw/state say/;
 use Cwd qw/abs_path/;
 use Try::Tiny;
 use Resque;
-use Honeydew::Config;
+use Honeydew::Config 0.05;
 use Moo;
+use DBI;
+
+BEGIN: {
+    use if -d '/opt/honeydew/lib', lib => '/opt/honeydew/lib';
+    use if -d '/opt/honeydew/lib', Honeydew::Reports;
+}
 
 has config => (
     is => 'lazy',
@@ -65,6 +71,11 @@ has resque => (
     }
 );
 
+has report_class => (
+    is => 'lazy',
+    default => sub { return 'Honeydew::Reports' }
+);
+
 has _base_command => (
     is => 'lazy',
     default => sub {
@@ -112,6 +123,9 @@ sub run_job {
 
             # we want to avoid wasting time on empty files
             @sets = grep { chomp; -f $features_dir . "/$_" } @sets;
+            if (scalar @sets) {
+                $self->create_set_report( %data );
+            }
 
             foreach my $feature (@sets) {
                 my $validated_feature = $self->validate_feature( $feature );
@@ -279,6 +293,29 @@ sub construct_base_command {
     $base_command .= " $hdew_bin/honeydew.pl -database ";
 
     return $base_command;
+}
+
+sub create_set_report {
+    my ($self, %values ) = @_;
+
+    my $user_id = $self->report_class->getUserId( $values{user} );
+    $values{userId} = $user_id;
+
+    # sanitize the set name
+    $values{setName} =~ s{^/opt/honeydew.*/sets/}{};
+
+    # populate missing initial values
+    $values{status} = 'success';
+    $values{startDate} = $values{startDate} || time;
+    $values{endDate} = $values{endDate} || time;
+
+    $values{setRunUnique} = delete $values{setRunId};
+
+    return $self->report_class->createSet(
+        $values{setRunUnique},
+        $values{setName},
+        \%values
+    );
 }
 
 1;
