@@ -4,12 +4,13 @@ requires "DBI" => "0";
 requires "DDP" => "0";
 requires "File::Spec" => "0";
 requires "Getopt::Long" => "0";
-requires "Honeydew::Config" => "0";
+requires "Honeydew::Config" => "0.05";
 requires "Honeydew::ExternalServices::Crontab" => "0";
 requires "Moo" => "0";
 requires "Resque" => "0";
 requires "Try::Tiny" => "0";
 requires "feature" => "0";
+requires "if" => "0";
 requires "strict" => "0";
 requires "warnings" => "0";
 
