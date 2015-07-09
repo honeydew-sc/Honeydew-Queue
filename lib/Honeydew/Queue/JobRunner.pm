@@ -13,7 +13,7 @@ use DBI;
 
 BEGIN: {
     use if -d '/opt/honeydew/lib', lib => '/opt/honeydew/lib';
-    use if -d '/opt/honeydew/lib', Honeydew::Reports;
+    use if -d '/opt/honeydew/lib', 'Honeydew::Reports';
 }
 
 has config => (
