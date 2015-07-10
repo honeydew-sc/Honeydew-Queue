@@ -18,14 +18,12 @@ on 'test' => sub {
   requires "DBD::Mock" => "0";
   requires "File::Basename" => "0";
   requires "File::Temp" => "0";
-  requires "Honeydew::Database" => "0";
   requires "Redis" => "0";
   requires "Sub::Install" => "0";
   requires "Test::More" => "0";
   requires "Test::RedisServer" => "0";
   requires "Test::Spec" => "0";
   requires "Test::mysqld" => "0";
-  requires "lib" => "0";
 };
 
 on 'configure' => sub {

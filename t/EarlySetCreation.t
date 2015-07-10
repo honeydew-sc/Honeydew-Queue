@@ -6,29 +6,44 @@ use Sub::Install;
 use Test::mysqld;
 use Test::RedisServer;
 
-use lib '/opt/honeydew/lib';
-use Honeydew::Database;
-
-plan skip_all => 'Honeydew::Reports not available'
-  unless -d '/opt/honeydew/lib';
+use if -d '/opt/honeydew/lib', lib => '/opt/honeydew/lib';
 
 our ($mysqld, $dbh);
+BEGIN: {
+    my $has_db = eval {
+        # quoted form avoids AutoPrereqs
+        require 'Honeydew/Database.pm';
+    };
+    plan skip_all => 'Necessary private libraries not available'
+      unless -d '/opt/honeydew/lib' && $has_db;
+
+    $mysqld = Test::mysqld->new
+      or skip $Test::mysqld::errstr, 1;
+
+    $dbh = DBI->connect( $mysqld->dsn );
+
+    Sub::Install::reinstall_sub({
+        code => sub { $dbh },
+        into => 'Honeydew::Database',
+        as => 'getDbh'
+    });
+
+    # Doing these requires at runtime allows us to get the
+    # reinstall_sub established before Honeydew::Reports sets its
+    # $dbh. The better solution would be to refactor Honeydew::Reports
+    # in its own open source project instead of these gymnastics, but
+    # eh!
+    my $has_reports = eval { require 'Honeydew/Reports.pm';};
+    my $has_jobrunner = eval { require Honeydew::Queue::JobRunner; };
+
+    # We have to use two skip_all's because we must reinstall_sub
+    # _AFTER_ loading Honeydew::Database and _BEFORE_ loading Honeydew
+    # Reports.
+    plan skip_all => 'Necessary private libraries are not available'
+      unless $has_reports and $has_jobrunner;
+}
+
 describe 'Early set record e2e' => sub {
-  BEGIN: {
-        $mysqld = Test::mysqld->new
-          or skip $Test::mysqld::errstr, 1;
-
-        $dbh = DBI->connect( $mysqld->dsn );
-
-        Sub::Install::reinstall_sub({
-            code => sub { $dbh },
-            into => 'Honeydew::Database',
-            as => 'getDbh'
-        });
-    }
-
-    require Honeydew::Queue::JobRunner;
-
     my ($config, $fh, $filename, $runner);
 
     before all => sub {
@@ -36,8 +51,6 @@ describe 'Early set record e2e' => sub {
         print $fh qq/[header]\nkey=value/;
         close ($fh);
     };
-
-
 
     before all => sub {
         $config = Honeydew::Config->instance( file => $filename );
