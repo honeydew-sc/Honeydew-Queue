@@ -11,8 +11,17 @@ use Honeydew::Config 0.05;
 use Moo;
 use DBI;
 
-if (-d '/opt/honeydew/lib') {
-    require Honeydew::Reports;
+# Do bad, messy things to handle the parts of Honeydew that aren't
+# open sourced yet.
+{
+    use if -d '/opt/honeydew/lib', lib => '/opt/honeydew/lib';
+    if (-d '/opt/honeydew/lib') {
+        my $REPORT_CLASS = 'Honeydew/Reports.pm';
+        eval { require $REPORT_CLASS; };
+        if ($@) {
+            warn 'Could not load Honeydew::Reports; you may experience slight turbulence...';
+        }
+    }
 }
 
 has config => (
