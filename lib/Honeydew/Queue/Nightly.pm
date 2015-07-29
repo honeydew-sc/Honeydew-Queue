@@ -13,18 +13,11 @@ has dbh => (
     is => 'lazy',
     default => sub {
         my ($self) = @_;
-        my $settings = $self->config->{mysql};
 
         require DBI;
         require DBD::mysql;
 
-        my $dbh = DBI->connect(
-            'DBI:mysql:database=' . $settings->{database}
-            . ';host=' . $settings->{host},
-            $settings->{username},
-            $settings->{password},
-            { RaiseError => 1 }
-        );
+        my $dbh = DBI->connect( $self->config->mysql_dsn );
 
         return $dbh;
     }
