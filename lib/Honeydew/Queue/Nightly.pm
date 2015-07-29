@@ -6,7 +6,7 @@ use feature qw/state say/;
 use Cwd qw/abs_path/;
 use File::Spec;
 use Honeydew::Config;
-use Honeydew::Queue::JobRunner qw/run_job/;
+use Honeydew::Queue::JobRunner;
 use Resque;
 
 has dbh => (
@@ -37,6 +37,18 @@ has resque => (
         return Resque->new( redis => $redis_addr );
     },
     predicate => 1
+);
+
+has job_runner => (
+    is => 'lazy',
+    default => sub {
+        my ($self) = @_;
+        my $resque = $self->resque;
+
+        return Honeydew::Queue::JobRunner->new(
+            resque => $resque
+        );
+    }
 );
 
 has run_all => (
@@ -379,11 +391,7 @@ sub all_commands_to_run {
 
 sub enqueue_all {
     my ($self) = @_;
-    my $resque = $self->resque;
-
-    my $runner = Honeydew::Queue::JobRunner->new(
-        resque => $resque
-    );
+    my $runner = $self->job_runner;
 
     my $commands = $self->all_commands_to_run;
 
