@@ -280,7 +280,7 @@ sub queue_job {
 
     $self->log($cmd);
     my $res = $r->push( $queue => {
-        class => 'Honeydew::Job',
+        class => 'Honeydew::Resque::Job',
         args => [{
             cmd => $cmd,
             test => $test
