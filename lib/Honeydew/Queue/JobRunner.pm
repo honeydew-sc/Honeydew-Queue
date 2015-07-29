@@ -310,7 +310,7 @@ sub create_set_report {
     $values{userId} = $user_id;
 
     # sanitize the set name
-    $values{setName} =~ s{^/opt/honeydew.*/sets/}{};
+    $values{setName} =~ s{^/.*/sets/}{};
 
     # populate missing initial values
     $values{status} = 'success';
