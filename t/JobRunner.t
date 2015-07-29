@@ -23,9 +23,9 @@ package Null {
 };
 
 my $runner = Honeydew::Queue::JobRunner->new(
-    report_class => Null->new
+    report_class => Null->new,
+    resque => Null->new
 );
-
 
 QUEUE: {
     my $cmd = '/usr/bin/perl  -I/opt/honeydew/lib  /opt/honeydew/bin/honeydew.pl -database -user=testdew  -feature=/opt/honeydew/features/./fake2.feature -setRunId=kqjafxdd -browser="Windows 2003 - chrome Local" -channel=private-asdfasdf -setName=/opt/honeydew/sets/testing.set -host=http://localhost';
@@ -115,6 +115,12 @@ REPLACE_FEATURE: {
 
     cmp_ok($replaceJob, "=~", qr/ \-reportId=.*$reportId/, "reportId is added correctly for single replace jobs");
     cmp_ok($replaceJob, "=~", qr/ \-size=$size/, "size is added correctly for single replace jobs");
+}
+
+REPLACE_MISSING_FEATURE: {
+    my $job = "feature=/opt/honeydew/features/test/dan.feature^host=http://www.sharecare.com^setName=sets/examples.set^setRunId=47^user=dgempesaw^local=127.0.0.2^browser=chrome local";
+    my $replace = $runner->run_job($job, 'test');
+    cmp_ok($replace, '=~', qr%-setName=sets/examples.set -setRunId=47%, 'missing feature replacements pass through set name and set run');
 }
 
 FEATURE: {
