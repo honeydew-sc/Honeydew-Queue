@@ -1,7 +1,8 @@
 Revision history for perl module Honeydew-Queue
 
-0.10 2015-07-29
- -
+0.11 2015-07-29
+ - Update class name for queued jobs to Honeydew::ResqueJob
+ - Make sure setRunId and setName are passed through
 
 0.09 2015-07-10
  - Create new set records before enqueueing the features
