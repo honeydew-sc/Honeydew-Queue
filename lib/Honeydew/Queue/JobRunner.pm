@@ -11,6 +11,8 @@ use Honeydew::Config 0.05;
 use Moo;
 use DBI;
 
+with 'Honeydew::Queue::JobRunner::Ios';
+
 # Do bad, messy things to handle the parts of Honeydew that aren't
 # open sourced yet.
 {
@@ -248,11 +250,21 @@ sub log {
     else {
         # say $msg;
     }
-
 }
 
 sub choose_queue {
-    my $cmd = shift || return;
+    my ($cmd) = @_;
+
+    if (is_real_ios($cmd)) {
+        return choose_ios_queue($cmd);
+    }
+    else {
+        return choose_default_queue($cmd);
+    }
+}
+
+sub choose_default_queue {
+    my ($cmd) = @_;
     my $config = Honeydew::Config->instance;
 
     my ($user) = $cmd =~ m/-user=(\w+)/;
