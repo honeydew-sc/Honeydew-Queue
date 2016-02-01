@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use Test::More;
+use Test::Fatal;
 
 plan skip_all => 'Tests are not ready for outside use'
   unless -d '/opt/honeydew';
@@ -53,6 +54,26 @@ QUEUE: {
     $cmd .= ' -local=1.2.3.4';
     my $nightly_queue = Honeydew::Queue::JobRunner->choose_queue($cmd);
     cmp_ok($nightly_queue, 'eq', 'fake_remote', 'Jobs without channels are background/nightlies and should be queued by box name');
+}
+
+QUEUE_IOS: {
+  IS_IOS: {
+        my $cmd = '-browser="iOS Mobile Safari Local"';
+        ok( $runner->is_real_ios($cmd), 'we can determine a real iOS job' );
+    }
+
+  INVALID: {
+        my $cmd = '-browser="iOS Mobile Safari Local';
+        ok( exception { $runner->choose_queue($cmd) },
+            'we cannot run real iOS without a local addr' );
+    }
+
+  VALID: {
+        my $ios_cmd = '-browser="iOS Mobile Safari Local" -local=1.2.3.4';
+
+        my $queue = $runner->choose_queue($ios_cmd);
+        is($queue, 'ios_1.2.3.4', 'we can choose the appropriate queue for an iOS job');
+    }
 }
 
 SET: {

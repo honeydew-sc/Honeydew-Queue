@@ -21,6 +21,7 @@ on 'test' => sub {
   requires "File::Temp" => "0";
   requires "Redis" => "0";
   requires "Sub::Install" => "0";
+  requires "Test::Fatal" => "0";
   requires "Test::More" => "0";
   requires "Test::RedisServer" => "0";
   requires "Test::Spec" => "0";

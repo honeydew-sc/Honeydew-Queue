@@ -11,6 +11,8 @@ use Honeydew::Config 0.05;
 use Moo;
 use DBI;
 
+sub log;
+
 with 'Honeydew::Queue::JobRunner::Ios';
 
 # Do bad, messy things to handle the parts of Honeydew that aren't
