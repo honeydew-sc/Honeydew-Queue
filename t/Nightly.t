@@ -21,7 +21,6 @@ describe 'Nightly' => sub {
     $dbh = DBI->connect( 'DBI:Mock:', '', '' )
       || die "Cannot create handle: $DBI::errstr\n";
 
-
     my ($fh, $filename) = tempfile();
     print $fh qq/[header]\nkey=value/;
     close ($fh);
@@ -289,7 +288,6 @@ describe 'Nightly' => sub {
                     )
                 );
             }
-
             $nightly = Honeydew::Queue::Nightly->new( %args );
         };
 
@@ -316,6 +314,10 @@ describe 'Nightly' => sub {
                 skip 'No temporary resque server available', 1
                   unless $nightly->has_resque;
 
+                # avoid hitting a real database, since this is tightly
+                # coupled to Honeydew::Reports, which is not yet open
+                # sourced.
+                Honeydew::Queue::JobRunner->expects('create_set_report');
                 my $resque = $nightly->resque;
                 $nightly->enqueue_all;
 
@@ -332,6 +334,10 @@ describe 'Nightly' => sub {
                 skip 'No temporary resque server available', 1
                   unless $nightly->has_resque;
 
+                # avoid hitting a real database, since this is tightly
+                # coupled to Honeydew::Reports, which is not yet open
+                # sourced.
+                Honeydew::Queue::JobRunner->expects('create_set_report');
                 my $resque = $nightly->resque;
                 $nightly->enqueue_all;
 
