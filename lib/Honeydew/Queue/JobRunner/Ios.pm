@@ -24,7 +24,7 @@ sub choose_ios_queue {
 sub parse_local_addr {
     my ($self, $cmd) = @_;
 
-    my ($local) = $cmd =~ m/-local=((?:\d{1,3}.?){4})/;
+    my ($local) = $cmd =~ m/-local=((?:\d{1,3}\.?){4})/;
 
     # We _need_ a local address to run real iOS device jobs, and don't
     # really have a clue what to do otherwise.
