@@ -253,18 +253,18 @@ sub log {
 }
 
 sub choose_queue {
-    my ($cmd) = @_;
+    my ($self, $cmd) = @_;
 
-    if (is_real_ios($cmd)) {
-        return choose_ios_queue($cmd);
+    if ($self->is_real_ios($cmd)) {
+        return $self->choose_ios_queue($cmd);
     }
     else {
-        return choose_default_queue($cmd);
+        return $self->choose_default_queue($cmd);
     }
 }
 
 sub choose_default_queue {
-    my ($cmd) = @_;
+    my ($self, $cmd) = @_;
     my $config = Honeydew::Config->instance;
 
     my ($user) = $cmd =~ m/-user=(\w+)/;
@@ -288,7 +288,7 @@ sub queue_job {
     my ($self, $cmd, $test) = @_;
 
     my $r = $self->resque;
-    my $queue = choose_queue($cmd);
+    my $queue = $self->choose_queue($cmd);
 
     $self->log($cmd);
     my $res = $r->push( $queue => {

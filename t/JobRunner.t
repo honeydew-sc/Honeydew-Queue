@@ -30,12 +30,12 @@ my $runner = Honeydew::Queue::JobRunner->new(
 QUEUE: {
     my $cmd = '/usr/bin/perl  -I/opt/honeydew/lib  /opt/honeydew/bin/honeydew.pl -database -user=testdew  -feature=/opt/honeydew/features/./fake2.feature -setRunId=kqjafxdd -browser="Windows 2003 - chrome Local" -channel=private-asdfasdf -setName=/opt/honeydew/sets/testing.set -host=http://localhost';
 
-    my $queue = Honeydew::Queue::JobRunner::choose_queue($cmd);
+    my $queue = Honeydew::Queue::JobRunner->choose_queue($cmd);
     cmp_ok($queue, 'eq', 'private-asdfasdf-testdew', 'private queues are named properly to allow them to auto-reap when empty');
     cmp_ok($queue, '=~', qw/testdew/, 'Job with channel and user gets put in user\'s queue');
 
     $cmd =~ s/asdfasdf/qwerqwer/;
-    my $second_queue = Honeydew::Queue::JobRunner::choose_queue($cmd);
+    my $second_queue = Honeydew::Queue::JobRunner->choose_queue($cmd);
     cmp_ok($second_queue, 'ne', $queue, 'A user can have multiple unique set queues');
 
     my $config = Honeydew::Config->instance;
@@ -51,7 +51,7 @@ QUEUE: {
     # To look like a nightly job, remove channel and add local
     $cmd =~ s/-channel=private-\w{8}//;
     $cmd .= ' -local=1.2.3.4';
-    my $nightly_queue = Honeydew::Queue::JobRunner::choose_queue($cmd);
+    my $nightly_queue = Honeydew::Queue::JobRunner->choose_queue($cmd);
     cmp_ok($nightly_queue, 'eq', 'fake_remote', 'Jobs without channels are background/nightlies and should be queued by box name');
 }
 
