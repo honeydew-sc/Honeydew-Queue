@@ -151,7 +151,10 @@ runtests;
 undef $mysqld;
 undef $dbh;
 
-package Null {
+{
+    package Null;
+
     my $null = bless {}, __PACKAGE__;
     sub AUTOLOAD { $null }
-};
+    1;
+}

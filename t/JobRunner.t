@@ -18,10 +18,13 @@ my $user = "testdew";
 my $channel = "hello";
 my $size="434x343";
 
-package Null {
+{
+    package Null;
+
     my $null = bless {}, __PACKAGE__;
     sub AUTOLOAD { $null }
-};
+    1;
+}
 
 my $runner = Honeydew::Queue::JobRunner->new(
     report_class => Null->new,
