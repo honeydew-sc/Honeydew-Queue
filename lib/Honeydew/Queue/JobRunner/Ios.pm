@@ -9,7 +9,7 @@ sub is_real_ios {
     my ($self, $cmd) = @_;
     my $IOS_DEVICE_NAME = 'iOS Mobile Safari';
 
-    return $cmd =~ /-browser=.$IOS_DEVICE_NAME/i;
+    return $cmd =~ /-browser=.*$IOS_DEVICE_NAME/i;
 }
 
 sub choose_ios_queue {

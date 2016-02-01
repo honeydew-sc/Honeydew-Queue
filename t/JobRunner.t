@@ -72,7 +72,7 @@ QUEUE_IOS: {
     }
 
   VALID: {
-        my $ios_cmd = '-browser="iOS Mobile Safari Local" -local=1.2.3.4';
+        my $ios_cmd = '-browser="52 iOS Mobile Safari Local" -local=1.2.3.4';
 
         my $queue = $runner->choose_queue($ios_cmd);
         is($queue, 'ios_1.2.3.4', 'we can choose the appropriate queue for an iOS job');
