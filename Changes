@@ -1,5 +1,8 @@
 Revision history for perl module Honeydew-Queue
 
+0.12 2016-01-31
+ - Choose queue specially for real iOS jobs
+
 0.11 2015-07-29
  - Update class name for queued jobs to Honeydew::ResqueJob
  - Make sure setRunId and setName are passed through
